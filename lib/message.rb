@@ -8,6 +8,10 @@ class Message
       "Account created successfully"
     end
 
+    def logout_success
+      "Logged out successfuly"
+    end
+
     def unprocessable_entity
       "Could not process this request. Ensure you passed the right data "
     end

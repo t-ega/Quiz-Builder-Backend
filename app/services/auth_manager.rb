@@ -19,16 +19,16 @@ class AuthManager
 
     def revoke_token(token)
       auth_token = AuthenticationToken.find_by(token: token)
-      auth_token.destroy
+      auth_token.update(expires_at: Time.current)
     end
 
     def find_by_authentication_token(token)
       auth_token =
         AuthenticationToken.where(
-          "token = ? AND exprires_at > ?",
+          "token = ? AND expires_at > ?",
           token,
           Time.current
-        )
+        ).first
       auth_token&.user
     end
 

@@ -49,7 +49,7 @@ module API
           else
             error!(
               {
-                error_code: 400,
+                sucess: false,
                 message: Message.unprocessable_entity,
                 errors: user.errors.full_messages
               },
@@ -58,7 +58,13 @@ module API
           end
         end
 
+        desc "Logout a user by expiring the token"
+
         post :logout do
+          authenticate!
+          token = authorization_token
+          AuthManager.revoke_token(token)
+          { sucess: true, message: Message.logout_success, data: nil }
         end
       end
     end

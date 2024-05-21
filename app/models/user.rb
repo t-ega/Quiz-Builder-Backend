@@ -9,4 +9,5 @@ class User < ApplicationRecord
          :confirmable
 
   has_many :authentication_tokens, dependent: :destroy
+  has_many :quizzes, dependent: :destroy
 end

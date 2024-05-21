@@ -64,7 +64,7 @@ module API
           authenticate!
           token = authorization_token
           AuthManager.revoke_token(token)
-          { sucess: true, message: Message.logout_success, data: nil }
+          status :no_content
         end
       end
     end

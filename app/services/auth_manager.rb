@@ -23,12 +23,7 @@ class AuthManager
     end
 
     def find_by_authentication_token(token)
-      auth_token =
-        AuthenticationToken.where(
-          "token = ? AND expires_at > ?",
-          token,
-          Time.current
-        ).first
+      auth_token = AuthenticationToken.valid(token).first
       auth_token&.user
     end
 

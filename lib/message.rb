@@ -8,6 +8,10 @@ class Message
       "Account created successfully"
     end
 
+    def not_found
+      "The requested resource could not be found"
+    end
+
     def unprocessable_entity
       "Could not process this request. Ensure you passed the right data "
     end

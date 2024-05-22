@@ -1,9 +1,6 @@
 module API
   module V1
     class Auth < Grape::API
-      version "v1", using: :path
-      format :json
-
       namespace :auth do
         desc "login a user"
 

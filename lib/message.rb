@@ -8,6 +8,14 @@ class Message
       "Account created successfully"
     end
 
+    def internal_server_error
+      "An internal error occurred. We are aware and are we are working on it."
+    end
+
+    def validation_error
+      "One or more required parameters are missing"
+    end
+
     def not_found
       "The requested resource could not be found"
     end

@@ -1,9 +1,10 @@
 class Quiz < ApplicationRecord
   scope :pub_id, ->(public_id) { where(public_id: public_id) }
+  default_scope { where(status: "DRAFT") }
 
   STATUSES = %w[DRAFT PUBLISHED].freeze
 
-  validates :title, presence: true, length: { min: 3, max: 30 }
+  validates :title, presence: true, length: { minimum: 3, maximum: 30 }
   # Duration is in seconds
   validates :duration,
             presence: true,
@@ -11,18 +12,12 @@ class Quiz < ApplicationRecord
               only_integer: true,
               greater_than: 0
             }
-  validates :opens_at,
-            optional: true,
-            numericality: {
-              greater_than_or_equal: Time.current.to_i
-            }
-  validates :closes_at,
-            optional: true,
-            numericality: {
-              greater_than: (Time.current + 10.min.from_now),
-              message:
-                "Quiz closing time must be minimum ten minutes from publish time"
-            }
+
+  validates :opens_at, presence: true
+  validates :closes_at, presence: true
+  validate :opens_at_in_future
+  validate :closes_at_after_opens_at
+
   validates :status,
             inclusion: {
               in: STATUSES,
@@ -33,8 +28,21 @@ class Quiz < ApplicationRecord
 
   belongs_to :user
   has_many :questions, dependent: :destroy
+  accepts_nested_attributes_for :questions
 
   private
+
+  def opens_at_in_future
+    if opens_at.present? && opens_at <= Time.current
+      errors.add(:opens_at, "must be in the future")
+    end
+  end
+
+  def closes_at_after_opens_at
+    if closes_at.present? && opens_at.present? && closes_at <= opens_at
+      errors.add(:closes_at, "must be after opens_at")
+    end
+  end
 
   def generate_public_id
     loop do

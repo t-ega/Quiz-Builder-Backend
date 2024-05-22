@@ -7,11 +7,11 @@ class CreateQuizzes < ActiveRecord::Migration[7.1]
       t.datetime :opens_at
       t.string :public_id, null: false
       t.datetime :closes_at
+      t.references :users, null: false, foreign_key: true
       t.string :permalink
       t.string :status, default: "DRAFT"
 
       t.timestamps
     end
-    add_foreign_key :quizzes, :user
   end
 end

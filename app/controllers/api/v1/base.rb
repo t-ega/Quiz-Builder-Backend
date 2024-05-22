@@ -1,7 +1,11 @@
 module API
   module V1
     class Base < Grape::API
+      version "v1", using: :path
       prefix :api
+      format :json
+
+      helpers ResponseHelpers
 
       helpers do
         def current_user
@@ -21,7 +25,27 @@ module API
         end
       end
 
+      rescue_from Grape::Exceptions::ValidationErrors do |e|
+        error_response(
+          message: Message.validation_error,
+          errors: e.full_messages,
+          code: 400
+        )
+      end
+
+      rescue_from :all do |e|
+        # TODO: Write errors to log file.
+        Rails.logger.error(e)
+
+        error_response(
+          message: Message.internal_server_error,
+          code: 500,
+          errors: ["Internal Server error"]
+        )
+      end
+
       mount API::V1::Auth
+      mount API::V1::Quiz
     end
   end
 end

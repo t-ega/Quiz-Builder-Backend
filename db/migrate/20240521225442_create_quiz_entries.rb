@@ -4,7 +4,7 @@ class CreateQuizEntries < ActiveRecord::Migration[7.1]
       t.string :participant_email
       t.integer :duration
       t.integer :score
-      t.references :quiz, null: false, foreign_key: true
+      t.references :quizzes, null: false, foreign_key: true
 
       t.timestamps
     end

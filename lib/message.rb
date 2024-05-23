@@ -4,6 +4,10 @@ class Message
       "Invalid credentials"
     end
 
+    def unauthorized_error
+      "You need to be uautorized to access this endpoint!"
+    end
+
     def account_created
       "Account created successfully"
     end

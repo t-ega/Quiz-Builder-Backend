@@ -30,7 +30,7 @@ class AuthManager
     private
 
     def generate_token
-      len = 16
+      len = 32
       loop do
         token = SecureRandom.alphanumeric(len)
         break token unless AuthenticationToken.exists?(token: token)

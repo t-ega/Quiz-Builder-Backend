@@ -16,12 +16,19 @@ module API
         end
 
         def authenticate!
-          error!("401 Unauthorized", 401) unless current_user
+          unless current_user
+            render_error(
+              message: Message.unauthorized_error,
+              errors: "401 Unautorized",
+              code: 401
+            )
+          end
         end
 
         def authorization_token
           # Memoize the token
           @authorization_token ||= headers["authorization"]
+          @authorization_token&.split(" ")&.last
         end
       end
 
@@ -36,7 +43,6 @@ module API
       rescue_from :all do |e|
         # TODO: Write errors to log file.
         Rails.logger.error(e)
-        puts e.backtrace
 
         error!(
           message: Message.internal_server_error,

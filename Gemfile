@@ -70,3 +70,4 @@ end
 gem "grape", "~> 2.0"
 gem "devise"
 gem "dotenv"
+gem "active_model_serializers"

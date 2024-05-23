@@ -1,22 +1,22 @@
 class Quiz < ApplicationRecord
   scope :pub_id, ->(public_id) { where(public_id: public_id) }
-  default_scope { where(status: "DRAFT") }
 
   STATUSES = %w[DRAFT PUBLISHED].freeze
 
   validates :title, presence: true, length: { minimum: 3, maximum: 30 }
   # Duration is in seconds
   validates :duration,
-            presence: true,
+            allow_nil: true,
             numericality: {
               only_integer: true,
               greater_than: 0
             }
 
-  validates :opens_at, presence: true
-  validates :closes_at, presence: true
   validate :opens_at_in_future
   validate :closes_at_after_opens_at
+
+  # TODO: Re-visit this later with Abiodun
+  before_update :quiz_published
 
   validates :status,
             inclusion: {
@@ -41,6 +41,12 @@ class Quiz < ApplicationRecord
   def closes_at_after_opens_at
     if closes_at.present? && opens_at.present? && closes_at <= opens_at
       errors.add(:closes_at, "must be after opens_at")
+    end
+  end
+
+  def quiz_published
+    if status_was == "PUBLISHED"
+      errors.add(:base, "Cannot modify a quiz once it's published!")
     end
   end
 

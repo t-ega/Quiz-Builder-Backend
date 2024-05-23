@@ -1,5 +1,5 @@
 class Question < ApplicationRecord
-  TYPES = %w[MULTIPLE-CHOICE SELECT SINGLE-CHOICE]
+  TYPES = %w[MULTI_CHOICE SELECT SINGLE]
   validates :question_type,
             inclusion: {
               in: TYPES,

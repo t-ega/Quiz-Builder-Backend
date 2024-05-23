@@ -36,8 +36,9 @@ module API
       rescue_from :all do |e|
         # TODO: Write errors to log file.
         Rails.logger.error(e)
+        puts e.backtrace
 
-        error_response(
+        error!(
           message: Message.internal_server_error,
           code: 500,
           errors: ["Internal Server error"]

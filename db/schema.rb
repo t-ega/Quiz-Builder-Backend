@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_21_225625) do
+ActiveRecord::Schema[7.1].define(version: 2024_05_22_235958) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -34,11 +34,11 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_21_225625) do
 
   create_table "questions", force: :cascade do |t|
     t.string "text"
-    t.bigint "quizzes_id", null: false
-    t.string "type"
+    t.bigint "quiz_id", null: false
+    t.string "question_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["quizzes_id"], name: "index_questions_on_quizzes_id"
+    t.index ["quiz_id"], name: "index_questions_on_quiz_id"
   end
 
   create_table "quiz_entries", force: :cascade do |t|
@@ -95,7 +95,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_21_225625) do
 
   add_foreign_key "authentication_tokens", "users"
   add_foreign_key "options", "questions"
-  add_foreign_key "questions", "quizzes", column: "quizzes_id"
+  add_foreign_key "questions", "quizzes"
   add_foreign_key "quiz_entries", "quizzes", column: "quizzes_id"
   add_foreign_key "quiz_entry_answers", "options"
   add_foreign_key "quiz_entry_answers", "quiz_entries", column: "quiz_entries_id"

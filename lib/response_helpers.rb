@@ -1,9 +1,9 @@
 module ResponseHelpers
-  def success_response(message:, data:)
+  def render_success(message:, data:)
     { status: true, message: message, data: data }
   end
 
-  def error_response(message:, errors:, code:)
+  def render_error(message:, errors:, code:)
     error!(
       {
         success: false,

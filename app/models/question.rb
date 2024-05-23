@@ -1,6 +1,6 @@
 class Question < ApplicationRecord
   TYPES = %w[MULTIPLE-CHOICE SELECT SINGLE-CHOICE]
-  validates :type,
+  validates :question_type,
             inclusion: {
               in: TYPES,
               message: "%{value} is not a valid question type"

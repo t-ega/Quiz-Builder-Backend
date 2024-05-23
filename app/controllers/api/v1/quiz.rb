@@ -1,7 +1,7 @@
 module API
   module V1
     class Quiz < Grape::API
-      helpers SharedParams
+      helpers SharedParams, ResponseHelpers
 
       namespace :quiz do
         desc "Create a quiz"
@@ -21,18 +21,22 @@ module API
                    type: String,
                    desc:
                      "The time when the quiz would no longer be valid to be taken"
-          requires :questions, type: Array do
+          requires :questions_attributes, type: Array do
             use :question # Shared params
           end
         end
 
         post do
+          puts "Here-t"
           quiz = CreateQuizService.call(params)
+          puts "Here"
+
           if quiz.valid?
-            success_response(message: "Quiz created successfuly", data: quiz)
+            render_success(message: "Quiz created successfuly", data: quiz)
             return
           end
-          error_response(
+
+          render_error(
             message: Message.unprocessable_entity,
             errors: quiz.errors.full_messages,
             code: 422

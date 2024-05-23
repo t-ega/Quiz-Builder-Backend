@@ -6,7 +6,7 @@ class Question < ApplicationRecord
               message: "%{value} is not a valid question type"
             }
   belongs_to :quiz
-  has_many :options
+  has_many :options, dependent: :destroy
 
   accepts_nested_attributes_for :options
 end

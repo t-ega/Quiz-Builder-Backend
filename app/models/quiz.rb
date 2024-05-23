@@ -1,7 +1,28 @@
 class Quiz < ApplicationRecord
+  include AASM
   scope :pub_id, ->(public_id) { where(public_id: public_id) }
 
-  STATUSES = %w[DRAFT PUBLISHED].freeze
+  STATUSES = %w[draft published archived].freeze
+
+  aasm whiny_persistence: true, column: :status do
+    state :draft, initial: true
+    state :published, before_enter: :generate_permalink
+    state :archived
+
+    event :publish do
+      transitions from: %i[draft archived], to: :published
+    end
+
+    event :archive do
+      transitions from: %i[draft published], to: :archived
+    end
+  end
+
+  # These are the attributes that can be modified when the quiz has been published
+  ALLOWED_ATTRIBUTES_WHEN_PUBLISHED = %w[active status].freeze
+
+  # TODO: Re-visit this later with Abiodun
+  validate :quiz_published, on: :update
 
   validates :title, presence: true, length: { minimum: 3, maximum: 30 }
   # Duration is in seconds
@@ -15,13 +36,10 @@ class Quiz < ApplicationRecord
   validate :opens_at_in_future
   validate :closes_at_after_opens_at
 
-  # TODO: Re-visit this later with Abiodun
-  before_update :quiz_published
-
   validates :status,
             inclusion: {
               in: STATUSES,
-              message: "%{value} is not a valid status"
+              message: "%{value} is not a valid status."
             }
 
   before_create :generate_public_id # This is how every quiz would be referenced
@@ -45,15 +63,31 @@ class Quiz < ApplicationRecord
   end
 
   def quiz_published
-    if status_was == "PUBLISHED"
+    # check if the previous status before this update was from a draft state
+    # Uses ActiveRecord#dirty to achieve this
+    previous_status_was_not_draft = status_was != Quiz::STATE_DRAFT.to_s
+    if previous_status_was_not_draft && disallowed_changes_present?
       errors.add(:base, "Cannot modify a quiz once it's published!")
     end
+  end
+
+  def disallowed_changes_present?
+    (changed - ALLOWED_ATTRIBUTES_WHEN_PUBLISHED).any?
   end
 
   def generate_public_id
     loop do
       self.public_id = SecureRandom.uuid
       break unless Quiz.exists?(public_id: public_id)
+    end
+  end
+
+  def generate_permalink
+    return if permalink.present?
+
+    loop do
+      self.permalink = SecureRandom.alphanumeric(15)
+      break unless Quiz.exists?(permalink: permalink)
     end
   end
 end

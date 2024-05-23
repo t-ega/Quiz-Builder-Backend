@@ -28,7 +28,7 @@ module API
 
         post do
           authenticate!
-          quiz = CreateQuizService.call(**params, user: current_user)
+          quiz = CreateQuizService.call(**declared(params), user: current_user)
 
           if quiz.valid?
             return(
@@ -97,10 +97,6 @@ module API
                    type: String,
                    desc:
                      "The time when the quiz would no longer be valid to be taken"
-          optional :status,
-                   type: String,
-                   values: %w[DRAFT PUBLISHED],
-                   desc: "The status of the quiz"
           optional :questions, type: Array do
             use :question # Shared params
           end
@@ -108,9 +104,10 @@ module API
 
         put ":id" do
           authenticate!
-          quiz = UpdateQuizService.call(params)
 
-          if quiz.errors.empty?
+          quiz = UpdateQuizService.call(declared(params))
+
+          if quiz.valid?
             return(
               render_success(message: "Quiz updated successfuly", data: quiz)
             )
@@ -119,6 +116,33 @@ module API
           render_error(
             message: Message.unprocessable_entity,
             errors: quiz.errors.full_messages,
+            code: 422
+          )
+        end
+
+        desc "Change the status of a quiz"
+
+        params do
+          requires :action, type: Symbol, values: %i[publish draft archive]
+        end
+
+        put ":id/status" do
+          authenticate!
+
+          publish =
+            UpdateQuizStatusService.call(
+              params[:id],
+              current_user,
+              params[:action]
+            )
+
+          if publish
+            return(render_success(message: "Quiz status updated successfully"))
+          end
+
+          render_error(
+            message: Message.unprocessable_entity,
+            errors: "Unable to update quiz status",
             code: 422
           )
         end

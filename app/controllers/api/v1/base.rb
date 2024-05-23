@@ -33,7 +33,7 @@ module API
       end
 
       rescue_from Grape::Exceptions::ValidationErrors do |e|
-        error_response(
+        render_error(
           message: Message.validation_error,
           errors: e.full_messages,
           code: 400
@@ -44,7 +44,7 @@ module API
         # TODO: Write errors to log file.
         Rails.logger.error(e)
 
-        error!(
+        render_error(
           message: Message.internal_server_error,
           code: 500,
           errors: ["Internal Server error"]

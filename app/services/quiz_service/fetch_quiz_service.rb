@@ -6,10 +6,6 @@ module QuizService
     end
 
     def call
-      quiz = Quiz.find_by(permalink: @permalink)
-      return if quiz.nil?
-
-      quiz.quiz_entries.where(email: @email)
     end
   end
 end

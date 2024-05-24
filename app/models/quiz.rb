@@ -2,6 +2,7 @@ class Quiz < ApplicationRecord
   include AASM
   scope :pub_id, ->(public_id) { where(public_id: public_id) }
   scope :current_user, ->(current_user) { where(user: current_user) }
+  scope :permalink, ->(permalink) { where(permalink: permalink) }
 
   STATUSES = %w[draft published archived].freeze
 

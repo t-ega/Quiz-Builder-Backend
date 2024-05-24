@@ -9,10 +9,12 @@ class SendInviteJob < ApplicationJob
     # Register participant for the quiz if the participant has not yet been enrolled.
 
     invites&.map do |invitee|
+      invitee = invitee.with_indifferent_access
+
       entry =
         QuizEntry.find_or_create_by(
-          participant_email: invitee["email"],
-          quiz_id: quiz["id"]
+          participant_email: invitee[:email],
+          quiz_id: quiz[:id]
         )
 
       if entry.valid?
@@ -26,8 +28,8 @@ class SendInviteJob < ApplicationJob
       # Log the details of the failure
       Rails.logger.error(
         {
-          message: "Unable to create entry for #{invitee["email"]}!",
-          error: entry.errors,
+          message: "Unable to create entry for #{invitee[:email]}!",
+          error: entry.errors.full_messages,
           entry: entry
         }
       )

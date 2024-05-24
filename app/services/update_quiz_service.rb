@@ -5,7 +5,7 @@ class UpdateQuizService < ApplicationService
   end
 
   def call
-    quiz = Quiz.find_by_id(@id)
+    quiz = Quiz.pub_id(@id).first
     return if quiz.nil?
 
     quiz.update(@options)

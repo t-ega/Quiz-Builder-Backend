@@ -44,11 +44,7 @@ module API
         # TODO: Write errors to log file.
         Rails.logger.error(e)
 
-        render_error(
-          message: Message.internal_server_error,
-          code: 500,
-          errors: ["Internal Server error"]
-        )
+        render_error(message: Message.internal_server_error, code: 500)
       end
 
       mount API::V1::Auth

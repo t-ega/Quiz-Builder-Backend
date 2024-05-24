@@ -90,6 +90,35 @@ module API
 
               render_error(message: Message.unprocessable_entity, code: 400)
             end
+
+            params do
+              requires :email,
+                       type: String,
+                       desc: "The email of the participant"
+              requires :answers, type: Array, as: :options_attributes do
+                requires :id, as: :option_id, type: Integer
+                requires :answered_at, type: DateTime
+              end
+            end
+
+            post :submit do
+              submission = QuizService::QuizSubmissionService.new(params)
+
+              if submission.call
+                return(
+                  render_success(
+                    message: "Quiz submitted",
+                    data: submission.quiz_entry
+                  )
+                )
+              end
+
+              render_error(
+                message: Message.unprocessable_entity,
+                errors: submission.errors,
+                code: 422
+              )
+            end
           end
         end
       end

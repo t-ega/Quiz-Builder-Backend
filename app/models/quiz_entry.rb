@@ -15,5 +15,18 @@ class QuizEntry < ApplicationRecord
               greater_than: 0
             },
             allow_nil: true
+
+  validate :prevent_update_if_quiz_taken, on: :update
+
   belongs_to :quiz
+  has_many :quiz_entry_answers
+  accepts_nested_attributes_for :quiz_entry_answers
+
+  private
+
+  def prevent_update_if_quiz_taken
+    # Check if the previous value of the taken_at column was not nil
+    # ActiveModel::Dirty method used.
+    errors.add(:base, "cannot modify this entry!") if taken_at_was.present?
+  end
 end

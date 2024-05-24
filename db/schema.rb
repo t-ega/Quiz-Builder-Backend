@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_24_001533) do
+ActiveRecord::Schema[7.1].define(version: 2024_05_24_224320) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -53,13 +53,13 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_24_001533) do
   end
 
   create_table "quiz_entry_answers", force: :cascade do |t|
-    t.bigint "quiz_entries_id", null: false
+    t.bigint "quiz_entry_id", null: false
     t.bigint "option_id", null: false
     t.datetime "answered_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["option_id"], name: "index_quiz_entry_answers_on_option_id"
-    t.index ["quiz_entries_id"], name: "index_quiz_entry_answers_on_quiz_entries_id"
+    t.index ["quiz_entry_id"], name: "index_quiz_entry_answers_on_quiz_entry_id"
   end
 
   create_table "quizzes", force: :cascade do |t|
@@ -98,6 +98,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_24_001533) do
   add_foreign_key "questions", "quizzes"
   add_foreign_key "quiz_entries", "quizzes"
   add_foreign_key "quiz_entry_answers", "options"
-  add_foreign_key "quiz_entry_answers", "quiz_entries", column: "quiz_entries_id"
+  add_foreign_key "quiz_entry_answers", "quiz_entries"
   add_foreign_key "quizzes", "users"
 end

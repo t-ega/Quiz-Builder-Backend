@@ -46,6 +46,7 @@ class Quiz < ApplicationRecord
   before_create :generate_public_id # This is how every quiz would be referenced
 
   belongs_to :user
+  has_many :quiz_entries, dependent: :nullify
   has_many :questions, dependent: :destroy
   accepts_nested_attributes_for :questions
 

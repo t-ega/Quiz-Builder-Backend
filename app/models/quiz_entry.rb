@@ -1,4 +1,6 @@
 class QuizEntry < ApplicationRecord
+  normalizes :participant_email, with: ->(email) { email.downcase.strip }
+
   validates :participant_email, presence: true
   validates :duration,
             numericality: {

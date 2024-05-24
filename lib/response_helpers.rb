@@ -1,5 +1,5 @@
 module ResponseHelpers
-  def render_success(message:, data: nil)
+  def render_success(message: "Successful", data: nil)
     { status: true, message: message, data: data }
   end
 

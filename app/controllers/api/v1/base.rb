@@ -52,7 +52,8 @@ module API
       end
 
       mount API::V1::Auth
-      mount API::V1::Quiz
+      mount Admin::Quiz
+      mount Client::Quiz
     end
   end
 end

@@ -18,6 +18,9 @@ class SendInviteJob < ApplicationJob
         )
 
       if entry.valid?
+        # Only send the invite if the user has not taken the quiz
+        return if entry.taken_at.present?
+
         InviteMailer
           .with(participant: invitee, host: host, url: url)
           .quiz_invite

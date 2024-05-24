@@ -37,7 +37,7 @@ module API
                 return
               end
 
-              return render_success(data: quiz)
+              return render_success(data: { quiz: quiz, entry: quiz_entry })
             end
 
             params do

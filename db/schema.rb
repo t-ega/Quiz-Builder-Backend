@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_23_142315) do
+ActiveRecord::Schema[7.1].define(version: 2024_05_24_001533) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -45,10 +45,11 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_23_142315) do
     t.string "participant_email"
     t.integer "duration"
     t.integer "score"
-    t.bigint "quizzes_id", null: false
+    t.bigint "quiz_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["quizzes_id"], name: "index_quiz_entries_on_quizzes_id"
+    t.datetime "taken_at"
+    t.index ["quiz_id"], name: "index_quiz_entries_on_quiz_id"
   end
 
   create_table "quiz_entry_answers", force: :cascade do |t|
@@ -64,7 +65,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_23_142315) do
   create_table "quizzes", force: :cascade do |t|
     t.string "title", null: false
     t.datetime "duration"
-    t.boolean "active"
     t.datetime "opens_at"
     t.string "public_id", null: false
     t.datetime "closes_at"
@@ -96,7 +96,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_23_142315) do
   add_foreign_key "authentication_tokens", "users"
   add_foreign_key "options", "questions"
   add_foreign_key "questions", "quizzes"
-  add_foreign_key "quiz_entries", "quizzes", column: "quizzes_id"
+  add_foreign_key "quiz_entries", "quizzes"
   add_foreign_key "quiz_entry_answers", "options"
   add_foreign_key "quiz_entry_answers", "quiz_entries", column: "quiz_entries_id"
   add_foreign_key "quizzes", "users"

@@ -6,7 +6,7 @@ class UpdateQuizStatusService < ApplicationService
   end
 
   def call
-    quiz = Quiz.find_by(id: @id, user: @current_user)
+    quiz = Quiz.find_by(public_id: @id, user: @current_user)
     return if quiz.nil?
 
     quiz.aasm.fire!(@action) if quiz.aasm.may_fire_event?(@action)

@@ -14,7 +14,7 @@ module API
             end
 
             get do
-              quiz = ::Quiz.find_by(permalink: params[:permalink])
+              quiz = ::Quiz.permalink(params[:permalink]).first
               email = params[:email].downcase
 
               if quiz.nil?

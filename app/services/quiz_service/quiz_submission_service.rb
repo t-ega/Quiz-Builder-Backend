@@ -59,10 +59,19 @@ module QuizService
            quiz_entry_answers_attributes: params[:options_attributes],
            taken_at: Time.current
          )
+        GradeQuizSubmission.call(quiz_entry.id)
+        send_notification
         return true
       end
       @errors << "The quiz could not be recorded!"
       false
+    end
+
+    def send_notification
+      QuizEntryNotificationMailer.new_entry_notification(
+        @quiz_entry.quiz,
+        @quiz_entry
+      ).deliver_later
     end
   end
 end

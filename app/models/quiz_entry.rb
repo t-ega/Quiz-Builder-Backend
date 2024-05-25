@@ -27,7 +27,7 @@ class QuizEntry < ApplicationRecord
   def prevent_update_if_quiz_taken
     # Check if the previous value of the taken_at and score column was not nil
     # ActiveModel::Dirty method used.
-    if taken_at_was.present && score_was.present?
+    if taken_at_was.present? && score_was.present?
       errors.add(:base, "cannot modify this entry!")
     end
   end

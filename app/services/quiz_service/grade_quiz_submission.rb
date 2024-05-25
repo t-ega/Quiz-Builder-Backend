@@ -17,24 +17,20 @@ module QuizService
     private
 
     def find_entry
-      @entry = QuizEntry.find(entry_id)
+      @entry = QuizEntry.includes(quiz_entry_answers: :option).find(entry_id)
     end
 
     def entry_exists?
-      return true if entry
-      false
-    end
-
-    def grade_quiz
+      entry.present? ? true : false
     end
 
     def calculate_score
-      @score = 0
-      entry&.quiz_entry_answers&.each do |answer|
-        puts "option: #{answer.option.inspect}"
-        @score += 1 if answer.option.is_right
-      end
-      @score
+      @score =
+        entry
+          .quiz_entry_answers
+          .joins(:option)
+          .where(options: { is_right: true })
+          .count
     end
   end
 end

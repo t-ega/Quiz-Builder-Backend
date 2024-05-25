@@ -97,12 +97,13 @@ module API
                        desc: "The email of the participant"
               requires :answers, type: Array, as: :options_attributes do
                 requires :id, as: :option_id, type: Integer
-                requires :answered_at, type: DateTime
               end
             end
 
             post :submit do
-              submission = QuizService::QuizSubmissionService.new(params)
+              valid_params = declared(params, include_parent_namespaces: false)
+              valid_params[:permalink] = params[:permalink]
+              submission = QuizService::QuizSubmissionService.new(valid_params)
 
               if submission.call
                 return(

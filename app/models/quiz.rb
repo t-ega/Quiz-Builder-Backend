@@ -49,7 +49,12 @@ class Quiz < ApplicationRecord
   belongs_to :user
   has_many :quiz_entries, dependent: :nullify
   has_many :questions, dependent: :destroy
+  has_many :options, through: :questions
   accepts_nested_attributes_for :questions
+
+  def option_ids
+    options.pluck(:id)
+  end
 
   private
 

@@ -1,6 +1,6 @@
 module QuizService
-  class QuizSubmissionService
-    attr_reader :params, :quiz, :quiz_entry, :errors
+  class QuizSubmissionService < ApplicationService
+    attr_reader :params, :quiz, :quiz_entry, :errors, :invalid_answers
 
     def initialize(params)
       @params = params.with_indifferent_access
@@ -16,13 +16,16 @@ module QuizService
 
       return false if quiz_already_taken?
 
+      validate_answers!
+      return false if invalid_answers
+
       submit_quiz_entry
     end
 
     private
 
     def find_quiz
-      @quiz = Quiz.permalink(params[:permalink]).first
+      @quiz = Quiz.includes(:quiz_entries).permalink(params[:permalink]).first
     end
 
     def find_quiz_entry

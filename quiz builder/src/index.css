@@ -1,0 +1,96 @@
+.auth-container {
+  display: flex;
+  height: 100vh;
+  justify-content: space-between;
+}
+
+body {
+  margin: 0;
+  font-family: "Raleway", sans-serif;
+}
+
+.picture-card {
+  background-color: #e6feed;
+  padding: 5px;
+  width: 50%;
+}
+
+.content {
+  background-color: #fafffb;
+  width: 50%;
+  text-align: center;
+  align-content: center;
+}
+
+.title {
+  text-align: center;
+  font-size: 30px;
+  font-family: "Signika Negative", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.title-decoration {
+  font-family: "Sevillana", sans-serif;
+  color: #73aa82;
+  font-weight: 900;
+}
+
+.login {
+  padding: 5px;
+  margin: 100px;
+  margin-top: 20px;
+  width: 70%;
+}
+
+.entry {
+  text-align: start;
+  margin-bottom: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  label {
+    color: gray;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+}
+
+.input-control{
+  height: 45px;
+  padding-left: 20px;
+}
+
+input:focus {
+  outline: none !important;
+  border:1px solid #73aa82;
+  box-shadow: 0 0 10px #719ECE;
+}
+
+.btn {
+  width: 100%;
+  height: 50px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #263238;
+  color: white;
+  font-size: medium;
+}
+
+.btn:hover {
+  background-color: #6ea77f;
+  cursor: pointer;
+}
+
+.forgot-password {
+  display: flex;
+  justify-content: end;
+  text-decoration: underline;
+  margin-bottom: 10px;
+}
+
+a{
+  color: #6ea77f;
+}

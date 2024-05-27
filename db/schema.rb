@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_25_030907) do
+ActiveRecord::Schema[7.1].define(version: 2024_05_27_173858) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -23,24 +23,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_25_030907) do
     t.index ["user_id"], name: "index_authentication_tokens_on_user_id"
   end
 
-  create_table "options", force: :cascade do |t|
-    t.string "text"
-    t.bigint "question_id", null: false
-    t.boolean "is_right"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["question_id"], name: "index_options_on_question_id"
-  end
-
-  create_table "questions", force: :cascade do |t|
-    t.string "text"
-    t.bigint "quiz_id", null: false
-    t.string "question_type"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["quiz_id"], name: "index_questions_on_quiz_id"
-  end
-
   create_table "quiz_entries", force: :cascade do |t|
     t.string "participant_email"
     t.integer "duration"
@@ -49,16 +31,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_25_030907) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "taken_at"
+    t.jsonb "answers"
     t.index ["quiz_id"], name: "index_quiz_entries_on_quiz_id"
-  end
-
-  create_table "quiz_entry_answers", force: :cascade do |t|
-    t.bigint "quiz_entry_id", null: false
-    t.bigint "option_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["option_id"], name: "index_quiz_entry_answers_on_option_id"
-    t.index ["quiz_entry_id"], name: "index_quiz_entry_answers_on_quiz_entry_id"
   end
 
   create_table "quizzes", force: :cascade do |t|
@@ -72,6 +46,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_25_030907) do
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "questions"
     t.index ["user_id"], name: "index_quizzes_on_user_id"
   end
 
@@ -93,10 +68,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_25_030907) do
   end
 
   add_foreign_key "authentication_tokens", "users"
-  add_foreign_key "options", "questions"
-  add_foreign_key "questions", "quizzes"
   add_foreign_key "quiz_entries", "quizzes"
-  add_foreign_key "quiz_entry_answers", "options"
-  add_foreign_key "quiz_entry_answers", "quiz_entries"
   add_foreign_key "quizzes", "users"
 end

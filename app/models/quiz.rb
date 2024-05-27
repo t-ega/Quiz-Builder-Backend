@@ -27,13 +27,6 @@ class Quiz < ApplicationRecord
   validate :quiz_published, on: :update
 
   validates :title, presence: true, length: { minimum: 3, maximum: 30 }
-  # Duration is in seconds
-  validates :duration,
-            allow_nil: true,
-            numericality: {
-              only_integer: true,
-              greater_than: 0
-            }
 
   validate :opens_at_in_future
   validate :closes_at_after_opens_at
@@ -48,13 +41,6 @@ class Quiz < ApplicationRecord
 
   belongs_to :user
   has_many :quiz_entries, dependent: :nullify
-  has_many :questions, dependent: :destroy
-  has_many :options, through: :questions
-  accepts_nested_attributes_for :questions
-
-  def option_ids
-    options.pluck(:id)
-  end
 
   private
 

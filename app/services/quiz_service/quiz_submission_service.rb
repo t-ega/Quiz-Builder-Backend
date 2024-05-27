@@ -16,9 +16,6 @@ module QuizService
 
       return false if quiz_already_taken?
 
-      validate_answers!
-      return false if invalid_answers
-
       submit_quiz_entry
     end
 
@@ -68,6 +65,9 @@ module QuizService
       end
       @errors << "The quiz could not be recorded!"
       false
+    end
+
+    def validate_answers
     end
 
     def send_notification

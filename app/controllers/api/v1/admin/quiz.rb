@@ -21,15 +21,19 @@ module API
                        type: DateTime,
                        desc:
                          "The time when the quiz would no longer be valid to be taken"
-              requires :questions_attributes, type: Array do
+              requires :questions, type: Hash do
                 use :question # Shared params
               end
             end
 
             post do
               authenticate!
+
               quiz =
-                CreateQuizService.call(**declared(params), user: current_user)
+                QuizService::CreateQuizService.call(
+                  **declared(params),
+                  user: current_user
+                )
 
               if quiz.valid?
                 return(
@@ -83,81 +87,52 @@ module API
               return(render_success(message: "Quizzes found", data: quiz))
             end
 
-            desc "Update a quiz"
-
-            params do
-              requires :id, type: String, desc: "The ID of the quiz"
-              optional :title, type: String, desc: "Title of the quiz"
-
-              optional :duration,
-                       type: Integer,
-                       desc:
-                         "How long the quiz should be taken. Note: Should be in secs!"
-              optional :opens_at,
-                       type: DateTime,
-                       desc: "The opening time of the quiz"
-              optional :closes_at,
-                       type: DateTime,
-                       desc:
-                         "The time when the quiz would no longer be valid to be taken"
-              optional :questions, type: Array do
-                use :question # Shared params
-              end
-            end
-
             route_param :id do
+              desc "Update a quiz"
+
+              params do
+                optional :title, type: String, desc: "Title of the quiz"
+                # Leave as symbol, aasm wont recognize string events!
+                optional :status, type: Symbol, values: %i[publish achrive]
+                optional :duration,
+                         type: Time,
+                         desc:
+                           "How long the quiz should be taken. Note: Should be in secs!"
+                optional :opens_at,
+                         type: DateTime,
+                         desc: "The opening time of the quiz"
+                optional :closes_at,
+                         type: DateTime,
+                         desc:
+                           "The time when the quiz would no longer be valid to be taken"
+                optional :questions, type: Array do
+                  use :question # Shared params
+                end
+              end
+
               put do
                 authenticate!
 
-                quiz = UpdateQuizService.call(declared(params))
+                quiz =
+                  QuizService::UpdateQuizService.new(
+                    params[:id],
+                    declared(params, include_parent_namespaces: false)
+                  )
 
-                if quiz.valid?
+                updated_quiz = quiz.update_quiz
+
+                if updated_quiz
                   return(
                     render_success(
                       message: "Quiz updated successfuly",
-                      data: quiz
+                      data: updated_quiz
                     )
                   )
                 end
 
                 render_error(
                   message: Message.unprocessable_entity,
-                  errors: quiz.errors.full_messages,
-                  code: 422
-                )
-              end
-
-              desc "Change the status of a quiz"
-
-              params do
-                requires :action,
-                         type: Symbol,
-                         values: %i[publish draft archive]
-              end
-
-              put "/status" do
-                authenticate!
-
-                action = params[:action]
-
-                publish =
-                  UpdateQuizStatusService.call(
-                    params[:id],
-                    current_user,
-                    action
-                  )
-
-                if publish
-                  return(
-                    render_success(
-                      message: "Quiz status updated to #{action} successfully"
-                    )
-                  )
-                end
-
-                render_error(
-                  message: Message.unprocessable_entity,
-                  errors: "Unable to update quiz status to #{action}",
+                  errors: quiz.errors,
                   code: 422
                 )
               end
@@ -176,7 +151,7 @@ module API
                 authenticate!
 
                 queued =
-                  SendQuizInviteService.call(
+                  QuizService::SendQuizInviteService.call(
                     params[:id],
                     current_user,
                     params[:invites]

@@ -7,6 +7,9 @@ import { Login } from "./pages/auth/login.tsx";
 import { SignUpComponent } from "./pages/auth/signup.tsx";
 import SideBar from "./pages/admin/side-bar.tsx";
 import QuizEntry from "./pages/client/quiz.tsx";
+import CreateQuiz from "./pages/admin/create-quiz.tsx";
+import { Provider } from "react-redux";
+import store from "./utils/store/index.ts";
 
 const router = createBrowserRouter([
   {
@@ -25,12 +28,14 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <QuizEntry />,
+    element: <CreateQuiz />,
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </React.StrictMode>
 );

@@ -158,6 +158,10 @@ a{
   cursor: pointer;
 }
 
+.limited-time{
+  color: red
+}
+
 .questions {
   flex-wrap: wrap;
   display: flex;
@@ -174,6 +178,7 @@ a{
 
 .quiz-dashboard {
   display: flex;
+  margin-left: 200px;
 }
 
 .question-card {
@@ -215,6 +220,10 @@ a{
   margin-right: 10px;
 }
 
+.navigate:hover {
+  cursor: pointer;
+}
+
 .options {
   padding: 3px;
   font-weight: bold;
@@ -230,7 +239,11 @@ a{
 
 .question-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+}
+
+.question-footer button:hover {
+  cursor: pointer;
 }
 
 .question-footer button{
@@ -246,7 +259,7 @@ a{
 }
 
 .header {
-  margin-left: 20px;
+  padding-left: 20px;
   display: flex;
   align-items: center;
   background-color: #ffffff;
@@ -261,4 +274,118 @@ a{
 }
 .header p{
   margin-top: 0;
+}
+
+.question-content {
+  width: 500px;
+  height: 100px;
+  border-radius: 15px;
+  margin: 20px;
+  border: 1px solid #6ea77f;
+}
+
+.question-content:focus{
+  outline: none;
+  border:1px solid #73aa82;
+  box-shadow: 0 0 10px #719ECE;
+}
+
+.quiz-duration {
+  width: 100px;
+  border-radius: 10px;
+  height: 30px;
+}
+
+.quiz-duration:focus{
+  outline: none;
+  border:1px solid #73aa82;
+  box-shadow: 0 0 10px #719ECE;
+}
+
+.question-choice {
+  display: flex;
+  position: relative;
+  margin: 15px;
+}
+
+.question-type {
+  margin: 20px;
+  background-color: #aeaeae;
+  border-radius: 10px;
+  align-content: center;
+  color: black;
+  padding: 20px;
+}
+
+.question-type:hover {
+  cursor: pointer;
+}
+
+.question-type.active {
+  border:3px solid #73aa82;
+  box-shadow: 0 0 10px #719ECE;
+}
+
+.multi-select {
+  font-weight: bold;
+}
+
+.multi-select div {
+  margin: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.delete-select {
+margin: 15px
+}
+
+.delete-select:hover{
+  color: red;
+  cursor: pointer;
+}
+
+.radio-select {
+  margin: 10px;
+  border: 0px;
+  min-width: 20px;
+  height: 2em;
+}
+
+.input-select{
+  height: 30px;
+  width: 100%;
+}
+
+.add-select {
+  border-radius: 10px;
+  background-color: #6ea77f;
+  border: none;
+  padding: 15px;
+}
+
+.input-select:focus {
+  outline: none;
+  border:1px solid #73aa82;
+  box-shadow: 0 0 10px #719ECE;
+}
+
+.new-question {
+  background-color: #6ea77f;
+  padding: 1px;
+  border-radius: 10px;
+}
+
+.quiz-title {
+  border-radius: 5px;
+  height: 20px;
+  border: 1px solid #6ea77f;
+}
+
+
+input:focus {
+  outline: none;
+  border:1px solid #73aa82;
+  box-shadow: 0 0 10px #719ECE;
 }

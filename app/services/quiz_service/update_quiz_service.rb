@@ -14,7 +14,7 @@ module QuizService
       find_quiz
       return if quiz_not_found?
 
-      # Prevent the status if included from updating through active record update
+      # Prevent the status(if included) from updating through active record update
       # Trigger it through aasm instead.
       quiz.update(@data.except(:status))
       return if update_not_successful?
@@ -58,10 +58,11 @@ module QuizService
     end
 
     def params_with_values(params)
-      params.each_with_object({}) do |(key, value), extracted|
-        extracted[key] = value if params[key].present?
-      end
-      params = params.with_indifferent_access
+      extracted =
+        params.each_with_object({}) do |(key, value), extracted|
+          extracted[key] = value if params[key].present?
+        end
+      extracted.with_indifferent_access
     end
   end
 end

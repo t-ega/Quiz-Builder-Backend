@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_05_27_173858) do
+ActiveRecord::Schema[7.1].define(version: 2024_05_30_164954) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -37,7 +37,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_27_173858) do
 
   create_table "quizzes", force: :cascade do |t|
     t.string "title", null: false
-    t.datetime "duration"
     t.datetime "opens_at"
     t.string "public_id", null: false
     t.datetime "closes_at"
@@ -47,6 +46,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_05_27_173858) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.jsonb "questions"
+    t.integer "quizzes_entries_count", default: 0
+    t.integer "duration"
     t.index ["user_id"], name: "index_quizzes_on_user_id"
   end
 

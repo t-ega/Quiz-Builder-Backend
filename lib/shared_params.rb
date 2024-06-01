@@ -5,8 +5,9 @@ module SharedParams
     requires :question, type: String, desc: "The contents of the question"
     requires :question_type,
              type: Symbol,
-             values: %i[MULTI_CHOICE SELECT SINGLE],
-             desc: "The type of the quiz e.g MULTI-CHOICE, SELECT, SINGLE"
+             values: %i[MULTIPLE_CHOICE SELECT BINARY_CHOICE],
+             desc:
+               "The type of the quiz e.g MULTIPLE_CHOICE, SELECT, BINARY_CHOICE"
 
     requires :options, type: Array do
       requires :option, type: String, desc: "The contents of the option"

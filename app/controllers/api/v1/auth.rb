@@ -16,7 +16,7 @@ module API
           token = AuthManager.authenticate_user(email, password)
           error!("Invalid email password", 401) if token.nil?
 
-          { access_token: token.token, username: token.user.username }
+          { token: token.token, username: token.user.username }
         end
 
         desc "Register a user"

@@ -9,7 +9,7 @@ module API
             desc "Create a quiz"
 
             params do
-              requires "title", type: String, desc: "Title of the quiz"
+              requires :title, type: String, desc: "Title of the quiz"
               optional "duration",
                        type: Integer,
                        desc:
@@ -21,7 +21,7 @@ module API
                        type: DateTime,
                        desc:
                          "The time when the quiz would no longer be valid to be taken"
-              requires :questions, type: Hash do
+              requires :questions, type: Array do
                 use :question # Shared params
               end
             end

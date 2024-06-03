@@ -1,6 +1,6 @@
 import { ChangeEvent } from "react";
 import { AppDispatch } from "../utils/store";
-import { QUESTION_TYPES } from "../utils/interfaces";
+import { QUESTION_TYPES, Question } from "../utils/interfaces";
 import {
   addQuestion,
   removeQuestion,
@@ -14,7 +14,9 @@ import SingleSelect from "./single-select";
 interface IQuestionCardProps {
   currentQuestion: any;
   currentQuestionIndex: number;
+  questionsList: Question[];
   questionsListLength: number;
+  save: () => void;
   handleQuestionInput: (e: ChangeEvent<HTMLTextAreaElement>) => void;
   dispatch: AppDispatch;
 }
@@ -26,6 +28,7 @@ const QuestionCard = (props: IQuestionCardProps) => {
     questionsListLength,
     handleQuestionInput,
     dispatch,
+    save,
   } = props;
 
   return (
@@ -42,7 +45,7 @@ const QuestionCard = (props: IQuestionCardProps) => {
           </div>
         )}
         <p>Question {currentQuestionIndex + 1}</p>
-        {currentQuestionIndex < questionsListLength - 1 && (
+        {questionsListLength <= 9 && (
           <div
             className="navigate"
             onClick={() => {
@@ -65,9 +68,13 @@ const QuestionCard = (props: IQuestionCardProps) => {
       <div className="question-choice">
         <div
           className={`question-type ${
-            currentQuestion.type === QUESTION_TYPES.MULTI_SELECT ? "active" : ""
+            currentQuestion.type === QUESTION_TYPES.SELECT_MULTIPLE
+              ? "active"
+              : ""
           }`}
-          onClick={() => dispatch(setQuestionType(QUESTION_TYPES.MULTI_SELECT))}
+          onClick={() =>
+            dispatch(setQuestionType(QUESTION_TYPES.SELECT_MULTIPLE))
+          }
           data-question-type="SELECT"
         >
           Select Multiple Options
@@ -75,12 +82,12 @@ const QuestionCard = (props: IQuestionCardProps) => {
 
         <div
           className={`question-type ${
-            currentQuestion.type === QUESTION_TYPES.MULTIPLE_CHOICE
+            currentQuestion.type === QUESTION_TYPES.MULTIPLE_CHOICES
               ? "active"
               : ""
           }`}
           onClick={() =>
-            dispatch(setQuestionType(QUESTION_TYPES.MULTIPLE_CHOICE))
+            dispatch(setQuestionType(QUESTION_TYPES.MULTIPLE_CHOICES))
           }
           data-question-type="MULTI_CHOICE"
         >
@@ -105,10 +112,12 @@ const QuestionCard = (props: IQuestionCardProps) => {
       {currentQuestion.type === QUESTION_TYPES.SINGLE_CHOICE && (
         <SingleSelect />
       )}
-      {currentQuestion.type === QUESTION_TYPES.MULTIPLE_CHOICE && (
+      {currentQuestion.type === QUESTION_TYPES.MULTIPLE_CHOICES && (
         <MultipleChoice />
       )}
-      {currentQuestion.type === QUESTION_TYPES.MULTI_SELECT && <MultiSelect />}
+      {currentQuestion.type === QUESTION_TYPES.SELECT_MULTIPLE && (
+        <MultiSelect />
+      )}
 
       <div className="question-footer">
         {currentQuestionIndex > 0 && (
@@ -121,7 +130,7 @@ const QuestionCard = (props: IQuestionCardProps) => {
             Delete Question
           </button>
         )}
-        <button>Save Quiz</button>
+        <button onClick={save}>Save Quiz</button>
       </div>
     </div>
   );

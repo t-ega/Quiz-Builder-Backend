@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   checkOption,
+  clearCheckedOptions,
   removeOption,
   setOption,
 } from "../utils/store/slices/question-slice";
@@ -12,6 +13,16 @@ const SelectGroup = (props: IOptionProps) => {
   const [value, setValue] = useState("");
   const [checked, setChecked] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
+
+  const handleChange = () => {
+    dispatch(clearCheckedOptions());
+    dispatch(
+      checkOption({
+        optionIndex: props.optionIndex,
+        is_right: !checked,
+      })
+    );
+  };
 
   const questionIndex = useSelector(
     (state: RootState) => state.questions.currentQuestionIndex
@@ -32,14 +43,7 @@ const SelectGroup = (props: IOptionProps) => {
         type="radio"
         className="radio-select"
         name="option"
-        onChange={() =>
-          dispatch(
-            checkOption({
-              optionIndex: props.optionIndex,
-              is_right: !checked,
-            })
-          )
-        }
+        onChange={handleChange}
         checked={checked}
       />
       <input

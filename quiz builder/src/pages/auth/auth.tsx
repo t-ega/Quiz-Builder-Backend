@@ -1,6 +1,5 @@
-import LoginForm from "../../components/login-form";
 import QuizSvg from "../../components/quiz-svg";
-import SignUpForm from "../../components/signup-form";
+import { Outlet } from "react-router-dom";
 
 export const Auth = () => {
   return (
@@ -13,7 +12,7 @@ export const Auth = () => {
           Quiz Builder <span className="title-decoration">Hub</span>
         </p>
 
-        <SignUpForm />
+        <Outlet />
       </div>
     </div>
   );

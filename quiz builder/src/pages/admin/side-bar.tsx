@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const SideBar = () => {
   return (
     <div className="sidebar">
@@ -8,12 +10,12 @@ const SideBar = () => {
       <hr></hr>
       <div className="nav-item">
         <i className="fa-brands fa-teamspeak fa-2xl"></i>
-        <p>Quizzes</p>
+        <Link to={"/"}>Quizzes</Link>
       </div>
       <hr></hr>
       <div className="nav-item">
         <i className="fa-solid fa-square-poll-vertical fa-2xl"></i>
-        <p>Results</p>
+        <Link to={"/results"}>Results</Link>
       </div>
       <hr></hr>
     </div>

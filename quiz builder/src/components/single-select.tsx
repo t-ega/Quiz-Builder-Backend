@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { checkOption, setOption } from "../utils/store/slices/question-slice";
+import {
+  checkOption,
+  clearCheckedOptions,
+  setOption,
+} from "../utils/store/slices/question-slice";
 import { AppDispatch, RootState } from "../utils/store";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -19,6 +23,16 @@ const SingleSelect = () => {
   );
   const options = questionList[questionIndex].options;
 
+  const handleChange = (checked: boolean, optionIndex: number) => {
+    dispatch(clearCheckedOptions());
+    dispatch(
+      checkOption({
+        optionIndex: optionIndex,
+        is_right: !checked,
+      })
+    );
+  };
+
   useEffect(() => {
     setValue(options[0].option);
     setChecked(options[0].is_right);
@@ -33,14 +47,7 @@ const SingleSelect = () => {
         <input
           type="radio"
           checked={checked}
-          onChange={() =>
-            dispatch(
-              checkOption({
-                optionIndex: 0,
-                is_right: !checked2,
-              })
-            )
-          }
+          onChange={() => handleChange(checked, 0)}
           className="radio-select"
           name="option"
         />
@@ -62,14 +69,7 @@ const SingleSelect = () => {
       <div>
         <input
           type="radio"
-          onChange={() =>
-            dispatch(
-              checkOption({
-                optionIndex: 1,
-                is_right: !checked2,
-              })
-            )
-          }
+          onChange={() => handleChange(checked2, 1)}
           className="radio-select"
           name="option"
           checked={checked2}

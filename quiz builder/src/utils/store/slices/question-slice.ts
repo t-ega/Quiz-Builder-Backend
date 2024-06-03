@@ -2,10 +2,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { QUESTION_TYPES, QuestionsState } from "../../interfaces";
 
 const initialState: QuestionsState = {
+  title: "",
+  duration: "",
   questionsList: [
     {
       question: "",
-      type: QUESTION_TYPES.MULTIPLE_CHOICE,
+      type: QUESTION_TYPES.MULTIPLE_CHOICES,
       options: [
         { id: Math.random(), option: "", is_right: false },
         { id: Math.random(), option: "", is_right: false },
@@ -19,6 +21,27 @@ const questionSlice = createSlice({
   name: "questions",
   initialState,
   reducers: {
+    setTitle: (state, action: PayloadAction<string>) => {
+      state.title = action.payload;
+    },
+
+    setQuizData: (state, action: PayloadAction<QuestionsState>) => {
+      state.title = action.payload.title;
+      state.duration = action.payload.duration;
+      state.questionsList = action.payload.questionsList;
+    },
+
+    resetStore: (state) => {
+      state.title = initialState.title;
+      state.duration = initialState.duration;
+      state.currentQuestionIndex = initialState.currentQuestionIndex;
+      state.questionsList = initialState.questionsList;
+    },
+
+    setDuration: (state, action: PayloadAction<string>) => {
+      state.duration = action.payload;
+    },
+
     setQuestion: (state, action: PayloadAction<string>) => {
       state.questionsList[state.currentQuestionIndex].question = action.payload;
     },
@@ -65,6 +88,14 @@ const questionSlice = createSlice({
       ].is_right = is_right;
     },
 
+    clearCheckedOptions: (state) => {
+      state.questionsList[state.currentQuestionIndex].options.forEach(
+        (option) => {
+          option.is_right = false;
+        }
+      );
+    },
+
     removeOption: (state, action: PayloadAction<number>) => {
       const currentQuestion = state.questionsList[state.currentQuestionIndex];
       if (currentQuestion.options.length > 2) {
@@ -87,7 +118,7 @@ const questionSlice = createSlice({
     addQuestion: (state) => {
       state.questionsList.push({
         question: "",
-        type: QUESTION_TYPES.MULTIPLE_CHOICE,
+        type: QUESTION_TYPES.MULTIPLE_CHOICES,
         options: [
           { id: Math.random(), option: "", is_right: false },
           { id: Math.random(), option: "", is_right: false },
@@ -104,8 +135,13 @@ export const {
   removeOption,
   addOption,
   addQuestion,
+  resetStore,
   checkOption,
   setCurrentQuestionIndex,
   removeQuestion,
+  clearCheckedOptions,
+  setDuration,
+  setQuizData,
+  setTitle,
 } = questionSlice.actions;
 export default questionSlice.reducer;

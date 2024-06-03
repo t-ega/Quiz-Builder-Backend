@@ -1,29 +1,85 @@
+import axios, { AxiosInstance, CancelToken } from "axios";
+import { ENDPOINTS } from "./endpoints";
+
 class ApiRequest {
-  //   this.baseUrl = "http://localhost:3000"
+  private readonly axiosInstance: AxiosInstance;
+  private instance: ApiRequest;
 
-  static get(url: string) {
-    fetch(url).then(() => {});
+  async get(url: string, cancelToken?: CancelToken) {
+    return await this.axiosInstance.get(url, { cancelToken }).catch((err) => {
+      if (axios.isCancel(err)) {
+        console.log("Axios request aborted.");
+      } else {
+        throw err;
+      }
+    });
   }
 
-  static post(url: string, data: any) {
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    };
-    fetch(url, options)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
+  constructor() {
+    this.axiosInstance = axios.create({
+      baseURL: "http://127.0.0.1:3000/api/v1",
+    });
+    this.instance = this;
+
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        // Get the token from cookies
+        const token = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("token="))
+          ?.split("=")[1];
+
+        // If the token exists, add it to the Authorization header
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
         }
-        return response.json();
-      })
-      .then((data) => {
-        console.log(data);
-      });
+
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    this.axiosInstance.interceptors.response.use(
+      (response) => {
+        if (
+          response.config.url?.includes(ENDPOINTS.SIGNUP) ||
+          response.config.url?.includes(ENDPOINTS.LOGIN)
+        ) {
+          const token = response.data.token;
+          // Store the token in cookies
+          document.cookie = `token=${token};path=/;`;
+        }
+
+        return response;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
   }
 
-  static put(url: string, data: any) {}
+  async post(url: string, data: any) {
+    const response = await this.axiosInstance.post(url, data);
+    return response;
+  }
+
+  public getInstance() {
+    if (!this.instance) {
+      this.instance = new ApiRequest();
+      return this.instance;
+    }
+    return this.instance;
+  }
+
+  async put(url: string, data: any) {
+    return await this.axiosInstance.put(url, data);
+  }
+
+  async delete(url: string) {
+    return await this.axiosInstance.delete(url);
+  }
 }
+
+export default new ApiRequest().getInstance();

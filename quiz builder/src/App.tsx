@@ -13,6 +13,10 @@ import EditQuiz from "./pages/admin/edit-quiz";
 import PrivateRoute from "./components/private-route";
 import QuizEntry from "./pages/client/take-quiz";
 import HomePage from "./pages/client/home-page";
+import { QuizTestContext } from "./utils/quiz-test.context";
+import { IQuizTest } from "./utils/validations/client";
+import { useState } from "react";
+import NotFound from "./pages/errors/404";
 
 function App() {
   const displayErrors = (errors: string[] | string) => {
@@ -20,8 +24,10 @@ function App() {
       errors?.map((error) => toast.error(error));
       return;
     }
-    toast.error(errors);
+    toast.error(`❌${errors}`);
   };
+
+  const [quizData, setQuizData] = useState<IQuizTest | null>(null);
 
   return (
     <div className="main">
@@ -38,33 +44,66 @@ function App() {
         theme="light"
       />
       <BrowserRouter>
-        <Routes>
-          <Route element={<PrivateRoute />}>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Quizzes />} />
-              <Route path="results" element={<QuizResults />} />
-              <Route path="quizzes">
-                <Route index element={<Quizzes />} />
+        <QuizTestContext.Provider value={quizData}>
+          <Routes>
+            <Route element={<PrivateRoute />}>
+              <Route path="/" element={<Layout />}>
+                <Route
+                  index
+                  element={<Quizzes displayErrors={displayErrors} />}
+                />
+                <Route
+                  path="results"
+                  element={<QuizResults displayErrors={displayErrors} />}
+                />
+                <Route path="quizzes">
+                  <Route
+                    index
+                    element={<Quizzes displayErrors={displayErrors} />}
+                  />
 
-                <Route path="new" element={<CreateQuiz />} />
-                <Route path=":quizId" element={<QuizOverview />} />
-                <Route path=":quizId/edit" element={<EditQuiz />} />
+                  <Route
+                    path="new"
+                    element={<CreateQuiz displayErrors={displayErrors} />}
+                  />
+                  <Route
+                    path=":quizId"
+                    element={<QuizOverview displayErrors={displayErrors} />}
+                  />
+                  <Route
+                    path=":quizId/edit"
+                    element={<EditQuiz displayErrors={displayErrors} />}
+                  />
+                </Route>
               </Route>
             </Route>
-          </Route>
-          <Route
-            path=":quizId/start"
-            element={<QuizEntry displayErrors={displayErrors} />}
-          ></Route>
-          <Route
-            path=":quizId"
-            element={<HomePage displayErrors={displayErrors} />}
-          ></Route>
-          <Route path="auth" element={<Auth />}>
-            <Route path="login" element={<LoginForm />} />
-            <Route path="signup" element={<SignUpForm />} />
-          </Route>
-        </Routes>
+
+            <Route
+              path=":quizId/start"
+              element={<QuizEntry displayErrors={displayErrors} />}
+            ></Route>
+            <Route
+              path=":quizId"
+              element={
+                <HomePage
+                  displayErrors={displayErrors}
+                  setQuizData={setQuizData}
+                />
+              }
+            ></Route>
+            <Route path="auth" element={<Auth />}>
+              <Route
+                path="login"
+                element={<LoginForm displayErrors={displayErrors} />}
+              />
+              <Route
+                path="signup"
+                element={<SignUpForm displayErrors={displayErrors} />}
+              />
+            </Route>
+            <Route path="*" element={<NotFound />}></Route>
+          </Routes>
+        </QuizTestContext.Provider>
       </BrowserRouter>
     </div>
   );

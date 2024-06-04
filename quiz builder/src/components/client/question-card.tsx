@@ -11,7 +11,7 @@ interface IQuestionCardProps {
   previousQuestion: () => void;
   updateQuestion: (updatedQuestions: IQuizTestQuestion) => void;
   nextQuestion: () => void;
-  submit: () => void;
+  submit: (skip_confirmation: boolean) => void;
 }
 
 const QuestionCard = (props: IQuestionCardProps) => {
@@ -61,7 +61,7 @@ const QuestionCard = (props: IQuestionCardProps) => {
       </div>
 
       <p style={{ margin: "10px", textTransform: "capitalize" }}>
-        {currentQuestion.question} {currentQuestion.type}
+        {currentQuestion.question}
       </p>
 
       {(currentQuestion.type === QUESTION_TYPES.MULTIPLE_CHOICES ||
@@ -80,7 +80,10 @@ const QuestionCard = (props: IQuestionCardProps) => {
       )}
 
       <div className="question-footer">
-        <button onClick={submit}>Submit Quiz</button>
+        {currentQuestionIndex + 1 < totalQuestions && (
+          <button onClick={() => nextQuestion()}>Next Question</button>
+        )}
+        <button onClick={() => submit(false)}>Submit Quiz</button>
       </div>
     </div>
   );

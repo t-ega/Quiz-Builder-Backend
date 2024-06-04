@@ -1,83 +1,61 @@
-import { DataGrid, GridEventListener } from "@mui/x-data-grid";
-import { useEffect, useState } from "react";
-import apiRequest from "../../utils/api-request";
-import { ENDPOINTS } from "../../utils/endpoints";
+import { DataGrid, GridColDef, GridEventListener } from "@mui/x-data-grid";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import axios, { CancelToken } from "axios";
+import { IComponentProps } from "../../utils/interfaces";
+import { useQuery } from "@tanstack/react-query";
+import { getQuizzess } from "../../api-requests/quiz";
+import Loader from "../../components/loader";
+import NotFound from "../errors/404";
+import { formatDate } from "../../utils/format-date";
 
-const columns = [
-  { field: "title", headerName: "Title", width: 150 },
-  { field: "candidates", headerName: "Invitees" },
+const columns: GridColDef[] = [
   { field: "public_id", headerName: "Id", width: 150 },
+  { field: "title", headerName: "Title", width: 150 },
+  { field: "quiz_entries_count", headerName: "Invitees" },
   { field: "status", headerName: "Status" },
-  { field: "last_activity", headerName: "Last Activity" },
+  {
+    field: "opens_at",
+    headerName: "Opens At",
+    valueFormatter: (value: string) => (value ? formatDate(value) : "Not set"),
+  },
+  {
+    field: "closes_at",
+    headerName: "Closes At",
+    valueFormatter: (value: string) => (value ? formatDate(value) : "Not set"),
+  },
+  { field: "questions_count", headerName: "Questions" },
   { field: "permalink", headerName: "Permalink" },
   { field: "created_at", headerName: "Date created" },
 ];
 
-const cache = {
-  quizzes: null,
-};
-
-const Quizzes = () => {
-  const [rows, setRows] = useState<{}[]>([]);
+const Quizzes = (props: IComponentProps) => {
+  const { displayErrors } = props;
   const navigate = useNavigate();
 
-  const fetchQuizzes = (cancelToken: CancelToken) => {
-    const cached = cache.quizzes;
-    if (cached) {
-      setRows(cached);
-      return;
-    }
-
-    apiRequest
-      .get(ENDPOINTS.ADMIN_QUIZ, cancelToken)
-      .then((res) => {
-        if (res) {
-          cache.quizzes = res.data.data;
-          setRows(res.data.data);
-        }
-      })
-      .catch((error) => {
-        if (error.response && error.response.data) {
-          displayError(error.response.data.message);
-          displayError(error.response.data.errors);
-          return;
-        }
-
-        displayError(error.message);
-      });
-  };
-
-  const displayError = (errors: string[] | string) => {
-    if (Array.isArray(errors)) {
-      errors.map((e) => toast.error(e));
-      return;
-    }
-    toast.error(errors);
-  };
-
   const handleRowClick: GridEventListener<"rowClick"> = (params) => {
-    navigate(`quizzes/${params.row.public_id}`);
+    navigate(`/quizzes/${params.row.public_id}`);
   };
 
-  useEffect(() => {
-    const source = axios.CancelToken.source();
-    fetchQuizzes(source.token);
-    return () => source.cancel();
-  }, []);
+  const quizzes = useQuery({
+    queryKey: ["quizzes"],
+    queryFn: getQuizzess,
+  });
+
+  if (quizzes.isLoading) return <Loader />;
+  if (quizzes.isError) {
+    displayErrors(quizzes.error.message);
+    return <NotFound />;
+  }
 
   return (
     <div className="quizzes-overview">
       <div className="new-quiz">
         <Link to={"/quizzes/new"}>
-          <button>Create New Quiz</button>
+          <button className="action-btn">Create New Quiz</button>
         </Link>
       </div>
 
       <DataGrid
-        rows={rows}
+        rows={quizzes.data?.data}
         sx={{ borderRadius: "20px", minHeight: "200px" }}
         columns={columns}
         onRowClick={handleRowClick}

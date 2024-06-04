@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Card } from "../../components/card";
-import { ENDPOINTS } from "../../utils/endpoints";
 import ApiRequest from "../../utils/api-request";
 import {
   QuizFlattenedErrors,
@@ -8,24 +7,55 @@ import {
 } from "../../utils/validations/admin";
 import { toast } from "react-toastify";
 import Loader from "../../components/loader";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import CardHeader from "../../components/card-header";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import axios, { CancelToken } from "axios";
-import { IQuiz, QuizStatus } from "../../utils/interfaces";
+import {
+  IComponentProps,
+  IQuiz,
+  KeyValuePair,
+  QuizStatus,
+} from "../../utils/interfaces";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
+import {
+  deleteQuiz,
+  fetchQuizDetails,
+  fetchQuizEntries,
+  sendInvites,
+  updateQuiz,
+} from "../../api-requests/quiz";
+import ErrorPage from "../errors/error";
+import LoadingButton from "../../components/loading-button";
+import { formatDate } from "../../utils/format-date";
 
-const columns = [
-  { field: "title", headerName: "Name" },
-  { field: "candidates", headerName: "Invited On" },
-  { field: "last_activity", headerName: "Score" },
-  { field: "created_at", headerName: "Status" },
+const columns: GridColDef[] = [
+  { field: "participant_email", headerName: "Email", width: 150 },
+  {
+    field: "created_at",
+    headerName: "Invited On",
+    width: 200,
+    valueFormatter: (params: string) => formatDate(params),
+  },
+  {
+    field: "score",
+    headerName: "Score",
+    valueFormatter: (params: string) => (params ? params : "Nil"),
+  },
+  {
+    field: "taken_at",
+    headerName: "Taken at",
+    width: 200,
+    valueFormatter: (params: string) =>
+      params ? formatDate(params) : "No attempt yet",
+  },
 ];
 
-const QuizOverview = () => {
+const QuizOverview = (props: IComponentProps) => {
+  const { displayErrors } = props;
   const [validationErrors, setValidationErrors] =
     useState<QuizFlattenedErrors>();
-  const [loading, setLoading] = useState(true);
   const [quiz, setQuiz] = useState<IQuiz>();
+  const [entries, setEntries] = useState([]);
   const navigate = useNavigate();
   const [input, setInput] = useState({
     firstName: "",
@@ -33,7 +63,50 @@ const QuizOverview = () => {
     email: "",
   });
   const { quizId } = useParams();
-  const quizUrl = `${ENDPOINTS.ADMIN_QUIZ}/${quizId}`;
+  const [formattedDate, setFormattedDate] = useState("");
+  const queryClient = useQueryClient();
+
+  const inviteMutation = useMutation({
+    mutationKey: ["quiz", "invites", quizId],
+    mutationFn: sendInvites,
+    onSuccess: () => {
+      toast.success("📩 Invite sent!");
+      setInput({ email: "", firstName: "", lastName: "" });
+      queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
+    },
+    onError: (err, _, ctx) => {
+      const message = ApiRequest.extractApiErrors(err);
+      displayErrors(message);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationKey: ["quiz", "delete", quizId],
+    mutationFn: deleteQuiz,
+    onSuccess: () => {
+      navigate("/quizzes");
+      toast.success("🎉 Quiz Deleted Successfuly!");
+      // queryClient.invalidateQueries({ queryKey: ["quizzes"] });
+    },
+    onError: (err, _, ctx) => {
+      const message = ApiRequest.extractApiErrors(err);
+      displayErrors(message);
+    },
+  });
+
+  const updateQuizStatusMutation = useMutation({
+    mutationKey: ["quiz", "update", "status", quizId],
+    mutationFn: updateQuiz,
+    onSuccess: ({ data }) => {
+      toast.success("🎉 Quiz Status Updated Successfuly!");
+      setQuiz(data.data);
+    },
+    onError: (err, _, ctx) => {
+      const message = ApiRequest.extractApiErrors(err);
+      displayErrors(message);
+    },
+  });
+
   const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
     const { name, value } = e.currentTarget;
     setInput((prev) => ({
@@ -42,20 +115,12 @@ const QuizOverview = () => {
     }));
   };
 
-  const displayErrors = (errors: string[] | string) => {
-    if (Array.isArray(errors)) {
-      errors?.map((error) => toast.error(error));
-      return;
-    }
-    toast.error(errors);
-  };
-
-  const sendInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log(quiz);
-
-    if (!quiz?.permalink) {
-      toast.error("You need to publish quiz first before sending invite!");
+  const processInvites = async () => {
+    if (
+      quiz?.status === QuizStatus.ARCHIVED ||
+      quiz?.status === QuizStatus.DRAFT
+    ) {
+      displayErrors("🤡 You need to publish quiz first before sending invite.");
       return;
     }
 
@@ -63,273 +128,294 @@ const QuizOverview = () => {
 
     if (data.error) {
       setValidationErrors(data.error?.flatten());
+      const { formErrors, fieldErrors } = data.error.flatten();
+      const allErrors = [...formErrors, ...Object.values(fieldErrors).flat()];
+      displayErrors(allErrors);
       return;
     }
 
-    const url = `${quizUrl}/invite`;
+    setValidationErrors(undefined);
 
-    // backend expects an array of invites
-    ApiRequest.post(url, { invites: [data.data] })
-      .then((res) => {
-        toast.success(res.data.message);
-      })
-      .catch((error) => {
-        if (error.response && error.response.data) {
-          displayErrors([
-            error.response.data.message,
-            error.response.data.errors,
-          ]);
-          return;
-        }
-
-        displayErrors(error.message);
-      });
+    inviteMutation.mutate({
+      email: input.email,
+      first_name: input.firstName,
+      last_name: input.lastName,
+      quizId: quizId!,
+    });
   };
 
-  const deleteQuiz = () => {
-    ApiRequest.delete(quizUrl)
-      .then((res) => {
-        toast.success(res.data.message);
-        navigate("/quizzes");
-      })
-      .catch((error) => {
-        if (error.response && error.response.data) {
-          displayErrors([
-            error.response.data.message,
-            error.response.data.errors,
-          ]);
-          return;
-        }
+  const handleDeleteQuiz = () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete? This action cannot be reversed!"
+      )
+    )
+      return;
 
-        displayErrors(error.message);
-      });
-  };
-
-  const fetchQuizDetails = async (cancelToken?: CancelToken) => {
-    try {
-      const response = await ApiRequest.get(quizUrl, cancelToken);
-
-      if (response) {
-        setQuiz(response.data.data);
-        setLoading(false);
-      }
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        displayErrors([
-          error.response.data.message,
-          error.response.data.errors,
-        ]);
-        // Navigate if any error
-        navigate("/quizzes");
-        return;
-      }
-      displayErrors(error.message);
-      // Navigate if any error
-      navigate("/quizzes");
-    }
+    deleteMutation.mutate(quizId!);
   };
 
   const copyPublicLink = () => {
     if (quiz?.permalink) {
-      navigator.clipboard.writeText(quiz?.permalink);
+      const permalink = `${window.location.protocol}/${window.location.host}/${quiz.permalink}`;
+      navigator.clipboard.writeText(permalink);
       toast.success("Link copied");
     }
   };
 
-  const updateQuizStatus = () => {
-    ApiRequest.put(quizUrl, { status: "publish" })
-      .then((res) => {
-        toast.success(res.data.message);
-        setQuiz(res.data.quiz);
-      })
-      .catch((error) => {
-        if (error.response && error.response.data) {
-          displayErrors(error.response.data.message);
-          displayErrors(error.response.data.errors);
-          return;
-        }
+  const renderActionButton = (
+    buttonText: string,
+    handleClick: () => void,
+    styles?: KeyValuePair
+  ) => {
+    if (updateQuizStatusMutation.isPending) {
+      return <LoadingButton styles={styles} />;
+    }
 
-        displayErrors(error.message);
-      });
+    return (
+      <button
+        className="action-btn filled"
+        style={styles}
+        onClick={handleClick}
+      >
+        {buttonText}
+      </button>
+    );
   };
 
+  const handleStatusUpdate = (status: "publish" | "archive") => {
+    const message =
+      status === "publish"
+        ? "Are you sure. Once a quiz is published it cannot be edited!"
+        : "Are you sure. Once a quiz is archived the public link would become inactive!";
+
+    if (!confirm(message)) return;
+
+    updateQuizStatusMutation.mutate({ status, quizId: quizId! });
+  };
+
+  const [quizEntriesQuery, quizQuery] = useQueries({
+    queries: [
+      {
+        queryKey: ["quiz", quizId],
+        queryFn: () => fetchQuizEntries(quizId!),
+        staleTime: 1000 * 60 * 5,
+      },
+      {
+        queryKey: ["quiz", "details", quizId],
+        queryFn: () => fetchQuizDetails(quizId!),
+        staleTime: 1000 * 60 * 5,
+      },
+    ],
+  });
+
   useEffect(() => {
-    const source = axios.CancelToken.source();
-    fetchQuizDetails(source.token);
-    return () => {
-      source.cancel();
-    };
-  }, []);
+    const response = quizQuery.data;
+    if (response) {
+      setQuiz(response.data);
+      const date = formatDate(response.data.created_at);
+      setFormattedDate(date);
+    }
+  }, [quizQuery.data]);
+
+  useEffect(() => {
+    const response = quizEntriesQuery.data;
+    if (response) {
+      setEntries(response.data);
+    }
+  }, [quizEntriesQuery.data]);
+
+  if (quizEntriesQuery.isLoading) return <Loader />;
+  if (quizEntriesQuery.isError)
+    return <ErrorPage message={quizEntriesQuery.error.message} />;
 
   return (
     <>
-      {loading ? (
-        <Loader />
-      ) : (
-        <>
+      <div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "end",
+            alignItems: "center",
+            marginRight: "10px",
+          }}
+        >
+          {quiz?.status === QuizStatus.PUBLISHED && (
+            <div>
+              {renderActionButton("Archive", () =>
+                handleStatusUpdate("archive")
+              )}
+            </div>
+          )}
+
+          {(quiz?.status === QuizStatus.DRAFT ||
+            quiz?.status === QuizStatus.ARCHIVED) && (
+            <div>
+              {renderActionButton("Publish", () =>
+                handleStatusUpdate("publish")
+              )}
+            </div>
+          )}
+
           <div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "end",
-                marginRight: "10px",
-              }}
-            >
+            {quiz?.status === QuizStatus.DRAFT && (
+              <Link to={`edit`}>
+                <button className="action-btn">Edit</button>
+              </Link>
+            )}
+            {deleteMutation.isPending ? (
+              <LoadingButton styles={{ backgroundColor: "red" }} />
+            ) : (
+              <button
+                className="action-btn filled"
+                style={{
+                  border: "2px solid red",
+                  backgroundColor: "red",
+                  color: "white",
+                }}
+                onClick={() => handleDeleteQuiz()}
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        </div>
+        <Card>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <h2 style={{ textTransform: "capitalize" }}>{quiz?.title}</h2>
               <div>
-                <button
-                  className="action-btn filled"
-                  onClick={() => updateQuizStatus()}
-                >
-                  Publish
-                </button>
-              </div>
-              <div>
-                {quiz?.status === QuizStatus.DRAFT && (
-                  <Link to={`edit`}>
-                    <button className="action-btn">Edit</button>
-                  </Link>
-                )}
-                <button
-                  className="action-btn"
+                {quiz?.duration && `${quiz.duration} mins | `}{" "}
+                <div
                   style={{
-                    border: "2px solid red",
-                    backgroundColor: "red",
-                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
                   }}
-                  onClick={() => deleteQuiz()}
                 >
-                  Delete
+                  <h4 style={{ margin: "0px" }}>Created:</h4>
+                  {formattedDate}
+                </div>
+              </div>
+            </div>
+            <div className="quiz-status">{quiz?.status}</div>
+          </div>
+        </Card>
+        <Card>
+          <CardHeader>
+            <h2>Invite Candidates</h2>
+            <span>
+              (Only available for <em>published</em> quiz)
+            </span>
+          </CardHeader>
+          <div className="invite">
+            <div className="left">
+              <h4>By public link</h4>
+              <div className="invite-details">
+                <p>General Public link</p>
+
+                <button
+                  onClick={() => copyPublicLink()}
+                  className={`action-btn ${
+                    quiz?.status === QuizStatus.DRAFT ? "disabled" : ""
+                  }`}
+                >
+                  Copy Link
                 </button>
               </div>
             </div>
-            <Card>
+            <div className="right">
+              <h4>By email</h4>
+
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
                   justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                <div>
-                  <h2 style={{ textTransform: "capitalize" }}>{quiz?.title}</h2>
-                  <div>
-                    {quiz?.duration && `${quiz.duration} mins`} |{" "}
-                    {quiz?.created_at}
-                  </div>
-                </div>
-                <div className="quiz-status">{quiz?.status}</div>
-              </div>
-            </Card>
-            <Card>
-              <CardHeader>
-                <h2>Invite Candidates</h2>
-                <span>
-                  (Only available for <em>published</em> quiz)
-                </span>
-              </CardHeader>
-              <div className="invite">
-                <div className="left">
-                  <h4>By public link</h4>
-                  <div className="invite-details">
-                    <p>General Public link</p>
-
+                <input
+                  type="text"
+                  name="firstName"
+                  value={input.firstName}
+                  onChange={handleInput}
+                  className={`input-control ${
+                    validationErrors?.fieldErrors?.first_name ? "error" : ""
+                  }`}
+                  placeholder="First Name"
+                />
+                <input
+                  type="text"
+                  name="lastName"
+                  value={input.lastName}
+                  onChange={handleInput}
+                  className={`input-control ${
+                    validationErrors?.fieldErrors?.last_name ? "error" : ""
+                  }`}
+                  placeholder="Last Name"
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <input
+                    type="email"
+                    name="email"
+                    value={input.email}
+                    onChange={handleInput}
+                    className={`input-control ${
+                      validationErrors?.fieldErrors?.email ? "error" : ""
+                    }`}
+                    placeholder="Email *"
+                    required
+                  />
+                  {inviteMutation.isPending ? (
+                    <LoadingButton
+                      className="action-btn input-control loading"
+                      styles={{ flex: 0 }}
+                    />
+                  ) : (
                     <button
-                      onClick={() => copyPublicLink()}
-                      className={`action-btn ${
+                      onClick={() => processInvites()}
+                      className={`action-btn input-control ${
                         quiz?.status === QuizStatus.DRAFT ? "disabled" : ""
                       }`}
+                      style={{ flex: 0 }}
                     >
-                      Copy Link
+                      Invite
                     </button>
-                  </div>
-                </div>
-                <div className="right">
-                  <h4>By email</h4>
-                  <form onSubmit={sendInvite}>
-                    <div
-                      style={{
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <input
-                        type="text"
-                        name="firstName"
-                        value={input.firstName}
-                        onChange={handleInput}
-                        className={`input-control ${
-                          validationErrors?.fieldErrors?.first_name
-                            ? "error"
-                            : ""
-                        }`}
-                        placeholder="First Name"
-                      />
-                      <input
-                        type="text"
-                        name="lastName"
-                        value={input.lastName}
-                        onChange={handleInput}
-                        className={`input-control ${
-                          validationErrors?.fieldErrors?.last_name
-                            ? "error"
-                            : ""
-                        }`}
-                        placeholder="Last Name"
-                      />
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <input
-                          type="email"
-                          name="email"
-                          value={input.email}
-                          onChange={handleInput}
-                          className={`input-control ${
-                            validationErrors?.fieldErrors?.email ? "error" : ""
-                          }`}
-                          placeholder="Email *"
-                          required
-                        />
-                        <button
-                          className={`action-btn input-control ${
-                            quiz?.status === QuizStatus.DRAFT ? "disabled" : ""
-                          }`}
-                          style={{ flex: 0 }}
-                        >
-                          Invite
-                        </button>
-                      </div>
-                    </div>
-                  </form>
+                  )}
                 </div>
               </div>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <h2>Candidates</h2>
-              </CardHeader>
-
-              <DataGrid
-                rows={[]}
-                sx={{ minHeight: "200px" }}
-                columns={columns}
-                initialState={{
-                  pagination: {
-                    paginationModel: { page: 0, pageSize: 5 },
-                  },
-                }}
-                pageSizeOptions={[5, 10]}
-                checkboxSelection
-              />
-            </Card>
+            </div>
           </div>
-        </>
-      )}
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2>Candidates</h2>
+          </CardHeader>
+
+          <DataGrid
+            rows={entries}
+            sx={{ minHeight: "200px" }}
+            columns={columns}
+            initialState={{
+              pagination: {
+                paginationModel: { page: 0, pageSize: 5 },
+              },
+            }}
+            pageSizeOptions={[5, 10]}
+          />
+        </Card>
+      </div>
     </>
   );
 };

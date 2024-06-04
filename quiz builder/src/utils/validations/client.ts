@@ -4,8 +4,11 @@ import { QUESTION_TYPES } from "../interfaces";
 const QuizTestOptionSchema = z
   .object({
     option: z.string(),
-    selected: z.boolean(),
   })
+  .transform((o) => ({
+    option: o.option,
+    selected: false,
+  }))
   .array();
 
 const QuizTestQuestionSchema = z
@@ -23,6 +26,7 @@ const QuizTestQuestionSchema = z
 const QuizTestQuestionsSchema = z.array(QuizTestQuestionSchema);
 
 export const QuizTestSchema = z.object({
+  email: z.string().email(),
   title: z.string(),
   duration: z.number().nullable(),
   questions: QuizTestQuestionsSchema,

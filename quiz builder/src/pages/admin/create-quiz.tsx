@@ -8,13 +8,15 @@ import {
 import QuestionCard from "../../components/question-card";
 import QuizInfo from "../../components/quiz-info";
 import ApiRequest from "../../utils/api-request";
-import { ENDPOINTS } from "../../utils/endpoints";
 import { QuizOutputSchema } from "../../utils/validations/admin";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { IComponentProps } from "../../utils/interfaces";
+import { useMutation } from "@tanstack/react-query";
+import { createQuiz } from "../../api-requests/quiz";
 
-const CreateQuiz = () => {
+const CreateQuiz = (props: IComponentProps) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { displayErrors } = props;
   const questionsList = useSelector(
     (state: RootState) => state.questions.questionsList
   );
@@ -32,43 +34,26 @@ const CreateQuiz = () => {
   const save = async () => {
     const validQuestions = QuizOutputSchema.safeParse(quiz);
 
-    if (!validQuestions.success) {
+    if (validQuestions.error) {
       const { formErrors, fieldErrors } = validQuestions.error.flatten();
       const allErrors = [...formErrors, ...Object.values(fieldErrors).flat()];
-      console.log(validQuestions.error.errors);
       displayErrors(allErrors);
       return;
     }
+    saveQuizMutation.mutate(validQuestions.data);
+  };
 
-    console.log("Validation data: ", validQuestions.data);
-
-    try {
-      const response = await ApiRequest.post(
-        ENDPOINTS.ADMIN_QUIZ,
-        validQuestions.data
-      );
-      const { data } = response.data;
-      // Clear the redux store
+  const saveQuizMutation = useMutation({
+    mutationFn: createQuiz,
+    onSuccess: ({ data }) => {
       dispatch(resetStore());
-      navigate(`/quizzes/${data.public_id}`);
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        displayErrors(error.response.data.message);
-        displayErrors(error.response.data.errors);
-        return;
-      }
-
-      displayErrors(error.message);
-    }
-  };
-
-  const displayErrors = (errors: string[] | string) => {
-    if (Array.isArray(errors)) {
-      errors?.map((error) => toast.error(error));
-      return;
-    }
-    toast.error(errors);
-  };
+      navigate(`/quizzes/${data.data.public_id}`);
+    },
+    onError: (err, _, __) => {
+      const message = ApiRequest.extractApiErrors(err);
+      displayErrors(message);
+    },
+  });
 
   return (
     <div>

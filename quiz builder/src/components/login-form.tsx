@@ -1,17 +1,19 @@
 import React, { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import ApiRequest from "../utils/api-request";
 import { ENDPOINTS } from "../utils/endpoints";
-import ErrorCard from "./error-card";
+import { IComponentProps } from "../utils/interfaces";
+import { LoginSchema } from "../utils/validations/auth";
 
-const LoginForm = () => {
+const LoginForm = (props: IComponentProps) => {
+  const { displayErrors } = props;
+  const navigate = useNavigate();
+
   const [input, setInput] = useState({
     email: "",
     password: "",
   });
 
-  const [error, seterror] = useState(false);
-  const [errorMessages, setErrorMessages] = useState([""]);
   const [user, setuser] = useState(null);
 
   const handleSubmitEvent = async (e: React.FormEvent) => {
@@ -21,28 +23,21 @@ const LoginForm = () => {
       email: input.email,
       password: input.password,
     };
-    // TODO: Use Zod for data validation.
-    if (input.email !== "" && input.password !== "") {
-      try {
-        const response = await ApiRequest.post(ENDPOINTS.LOGIN, data);
-        // TODO: Store in redux store.
-        const userData = response.data.username;
-        setuser(userData);
-      } catch (error: any) {
-        if (error.response && error.response.data) {
-          const { errors } = error.response.data;
-          seterror(true);
-          setErrorMessages(errors || []);
 
-          setTimeout(() => {
-            seterror(false);
-            setErrorMessages([]);
-          }, 10000);
-        } else {
-          setErrorMessages(["An error occurred during signup."]);
-        }
-        return;
-      }
+    const validation = LoginSchema.safeParse(data);
+    if (validation.error) {
+      const { formErrors, fieldErrors } = validation.error.flatten();
+      const allErrors = [...formErrors, ...Object.values(fieldErrors).flat()];
+      displayErrors(allErrors);
+      return;
+    }
+
+    try {
+      await ApiRequest.post(ENDPOINTS.LOGIN, validation.data);
+      navigate("/");
+    } catch (error: any) {
+      const message = ApiRequest.extractApiErrors(error);
+      displayErrors(message);
     }
   };
 
@@ -56,9 +51,6 @@ const LoginForm = () => {
 
   return (
     <div>
-      {error && errorMessages && (
-        <ErrorCard message={"An error occured"} errors={errorMessages} />
-      )}
       {user && <Navigate to={"/"} />}
       <form onSubmit={handleSubmitEvent}>
         <div className="form">

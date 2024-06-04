@@ -36,6 +36,10 @@ export enum QuizStatus {
   ARCHIVED = "archived",
 }
 
+export type KeyValuePair = {
+  [key: string]: string | number;
+};
+
 export interface IQuiz {
   public_id: string;
   title: string;

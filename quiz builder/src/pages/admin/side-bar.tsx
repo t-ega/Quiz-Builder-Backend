@@ -10,7 +10,7 @@ const SideBar = () => {
       <hr></hr>
       <div className="nav-item">
         <i className="fa-brands fa-teamspeak fa-2xl"></i>
-        <Link to={"/"}>Quizzes</Link>
+        <Link to={"/quizzes"}>Quizzes</Link>
       </div>
       <hr></hr>
       <div className="nav-item">

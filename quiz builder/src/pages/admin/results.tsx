@@ -1,8 +1,10 @@
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import apiRequest from "../../utils/api-request";
+import ApiRequest from "../../utils/api-request";
 import { ENDPOINTS } from "../../utils/endpoints";
 import { useEffect, useState } from "react";
 import Loader from "../../components/loader";
+import { IComponentProps } from "../../utils/interfaces";
+import axios, { CancelToken } from "axios";
 
 const columns: GridColDef[] = [
   { field: "title", headerName: "Title", width: 140 },
@@ -41,60 +43,49 @@ const columns: GridColDef[] = [
   },
 ];
 
-const QuizResults = () => {
+const QuizResults = (props: IComponentProps) => {
+  const { displayErrors } = props;
   const [rows, setRows] = useState<{}[]>([]);
-  const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
-  const fetchQuizResults = async () => {
+  const fetchQuizResults = async (cancelToken: CancelToken) => {
     try {
-      const response = await apiRequest.get(ENDPOINTS.ADMIN_QUIZ);
+      const response = await ApiRequest.get(ENDPOINTS.ADMIN_QUIZ, cancelToken);
+      if (!response) return;
       setRows(response.data.data);
       setLoading(false);
     } catch (error: any) {
-      if (error.response && error.response.data) {
-        setErrorMessages([
-          error.response.data.message,
-          error.response.data.errors,
-        ]);
-        return;
-      }
-      setErrorMessages(error.message);
-
-      displayError();
+      const message = ApiRequest.extractApiErrors(error);
+      displayErrors(message);
     }
   };
 
-  const displayError = () => {
-    setError(true);
-
-    setTimeout(() => {
-      setError(false);
-      setErrorMessages([]);
-    }, 10000);
-  };
-
   useEffect(() => {
-    fetchQuizResults();
+    const source = axios.CancelToken.source();
+    fetchQuizResults(source.token);
+    return () => source.cancel();
   }, []);
 
   return (
     <div className="quiz-dashboard">
       <h2>Results</h2>
       <div style={{ width: "100%" }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          initialState={{
-            pagination: {
-              paginationModel: { page: 0, pageSize: 5 },
-            },
-          }}
-          sx={{ minHeight: "200px" }}
-          pageSizeOptions={[5, 10]}
-          checkboxSelection
-        />
+        {loading ? (
+          <Loader />
+        ) : (
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            initialState={{
+              pagination: {
+                paginationModel: { page: 0, pageSize: 5 },
+              },
+            }}
+            sx={{ minHeight: "200px" }}
+            pageSizeOptions={[5, 10]}
+            checkboxSelection
+          />
+        )}
       </div>
     </div>
   );

@@ -48,8 +48,13 @@ class ApiRequest {
           response.config.url?.includes(ENDPOINTS.LOGIN)
         ) {
           const token = response.data.token;
+          const username = response.config.url?.includes(ENDPOINTS.SIGNUP)
+            ? response.data.user?.username
+            : response.data?.username;
+
           // Store the token in cookies
           document.cookie = `token=${token};path=/;`;
+          document.cookie = `username=${username};path=/;`;
         }
 
         return response;
@@ -79,6 +84,18 @@ class ApiRequest {
 
   async delete(url: string) {
     return await this.axiosInstance.delete(url);
+  }
+
+  extractApiErrors(error: any) {
+    const response = error.response;
+    const data = response?.data;
+
+    if (data?.errors) return data.errors;
+    if (data?.message) return data.message;
+
+    if (error.message) return error.message;
+
+    return error;
   }
 }
 

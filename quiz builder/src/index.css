@@ -229,6 +229,17 @@ a {
   background-color: white;
 }
 
+.action-btn.loading {
+  padding: 12px 50px;
+  display: flex;
+}
+
+.action-btn.loading:hover {
+  cursor: not-allowed;
+}
+
+
+
 .quiz-status {
   border-radius: 20px;
   color: green;
@@ -317,6 +328,75 @@ a {
 
 .question-footer button:hover {
   cursor: pointer;
+}
+
+.fof{
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  height: 100vh;
+  align-items: center;
+}
+
+.fof h1{
+  font-size: 50px;
+  display: inline-block;
+  padding-right: 12px;
+  animation: type .5s alternate infinite;
+}
+
+@keyframes type{
+  from{box-shadow: inset -3px 0px 0px #888;}
+  to{box-shadow: inset -3px 0px 0px transparent;}
+}
+
+.buttonload {
+  font-weight: bold;
+  padding: 12px 25px;
+  color: white;
+  background-color: #6ea77f;
+  border: none;
+  margin: 25px;
+}
+
+.buttonload:hover {
+  cursor: not-allowed;
+}
+
+.fa {
+  margin-left: -12px;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% {transform: rotate(0deg);}
+  100% {transform: rotate(360deg);}
+}
+
+.centered {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+h1 {
+  margin-bottom: 50px;
+  font-size: 50px;
+}
+
+.message {
+  display: inline-block;
+  line-height: 1.2;
+  transition: line-height .2s, width .2s;
+  overflow: hidden;
+}
+
+.message,
+.hidden {
+  font-family: 'Roboto Slab', serif;
+  font-size: 18px;
 }
 
 .question-footer button {

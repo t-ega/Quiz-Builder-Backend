@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../utils/store";
 import {
@@ -9,18 +9,20 @@ import {
 import QuestionCard from "../../components/question-card";
 import QuizInfo from "../../components/quiz-info";
 import ApiRequest from "../../utils/api-request";
-import { ENDPOINTS } from "../../utils/endpoints";
 import {
   QuizInputSchema,
   QuizOutputSchema,
 } from "../../utils/validations/admin";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
-import axios, { CancelToken } from "axios";
+import { IComponentProps } from "../../utils/interfaces";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchQuizDetails, updateQuiz } from "../../api-requests/quiz";
+import Loader from "../../components/loader";
+import ErrorPage from "../errors/error";
 
-const EditQuiz = () => {
+const EditQuiz = (props: IComponentProps) => {
+  const { displayErrors } = props;
   const dispatch = useDispatch<AppDispatch>();
-  const [loading, setLoading] = useState(false);
   const questionsList = useSelector(
     (state: RootState) => state.questions.questionsList
   );
@@ -36,7 +38,6 @@ const EditQuiz = () => {
   };
 
   const { quizId } = useParams();
-  const quizUrl = `${ENDPOINTS.ADMIN_QUIZ}/${quizId}`;
 
   const save = async () => {
     const validQuestions = QuizOutputSchema.safeParse(quiz);
@@ -48,83 +49,56 @@ const EditQuiz = () => {
       return;
     }
 
-    ApiRequest.put(quizUrl, validQuestions.data)
-      .then(() => {
-        navigate(`/quizzes/${quizId}`);
-      })
-      .catch((error) => {
-        if (error.response && error.response.data) {
-          displayErrors(error.response.data.message);
-          displayErrors(error.response.data.errors);
-          return;
-        }
-
-        displayErrors(error.message);
-      });
+    saveQuizMutation.mutate({
+      quizId: quizId!,
+      ...validQuestions.data,
+    });
   };
 
-  const displayErrors = (errors: string[] | string) => {
-    if (Array.isArray(errors)) {
-      errors?.map((error) => toast.error(error));
-      return;
-    }
-    toast.error(errors);
-  };
+  const queryClient = useQueryClient();
 
-  const fetchQuizQuestions = async (cancelToken?: CancelToken) => {
-    setLoading(true);
-    try {
-      const response = await ApiRequest.get(quizUrl, cancelToken);
+  const saveQuizMutation = useMutation({
+    mutationFn: updateQuiz,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["quiz", "details", quizId] });
+      dispatch(resetStore());
+      navigate(`/quizzes/${quizId}`);
+    },
+    onError: (err, _, __) => {
+      const message = ApiRequest.extractApiErrors(err);
+      displayErrors(message);
+    },
+  });
 
-      if (response) {
-        const { data } = response.data;
-        const transformedData = QuizInputSchema.safeParse(data);
-        console.log(transformedData.data, transformedData.error?.errors);
-        if (transformedData.data) {
-          const { title, duration, questionsList } = transformedData.data;
-          dispatch(
-            setQuizData({
-              title,
-              duration,
-              questionsList,
-              currentQuestionIndex: 0,
-            })
-          );
-        } else {
-          const { formErrors, fieldErrors } = transformedData.error.flatten();
-          const allErrors = [
-            ...formErrors,
-            ...Object.values(fieldErrors).flat(),
-          ];
-          displayErrors(allErrors);
-        }
-        setLoading(false);
-      }
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        displayErrors([
-          error.response.data.message,
-          error.response.data.errors,
-        ]);
-        // Navigate if any error
-        navigate("/quizzes");
-        return;
-      }
-      displayErrors(error.message);
-      // Navigate if any error
-      navigate("/quizzes");
-    }
-  };
+  const quizQuery = useQuery({
+    queryKey: ["quiz", "edit", quizId],
+    queryFn: () => fetchQuizDetails(quizId!),
+  });
 
   useEffect(() => {
-    const source = axios.CancelToken.source();
-    fetchQuizQuestions(source.token);
-    return () => {
-      // resetStore
-      dispatch(resetStore());
-      source.cancel();
-    };
-  }, []);
+    const response = quizQuery.data;
+    if (response) {
+      const { data } = response;
+      const transformedData = QuizInputSchema.safeParse(data);
+
+      if (transformedData.data) {
+        const { title, duration, questionsList } = transformedData.data;
+        dispatch(
+          setQuizData({
+            title,
+            duration,
+            questionsList,
+            currentQuestionIndex: 0,
+          })
+        );
+      } else {
+        displayErrors("😓 Unable to load quiz");
+      }
+    }
+  }, [quizQuery.data]);
+
+  if (quizQuery.isFetching) return <Loader />;
+  if (quizQuery.error) return <ErrorPage message={quizQuery.error.message} />;
 
   return (
     <div>

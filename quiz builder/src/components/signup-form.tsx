@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { ENDPOINTS } from "../utils/endpoints";
 import ApiRequest from "../utils/api-request";
-import ErrorCard from "./error-card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { IComponentProps } from "../utils/interfaces";
+import { SignUpSchema } from "../utils/validations/auth";
 
-const SignUpForm = () => {
-  const [error, seterror] = useState(false);
-  const [errorMessages, setErrorMessages] = useState([""]);
+const SignUpForm = (props: IComponentProps) => {
+  const { displayErrors } = props;
+  const navigate = useNavigate();
 
   const [input, setInput] = useState({
     email: "",
@@ -21,31 +22,26 @@ const SignUpForm = () => {
     const data = {
       email: input.email,
       password: input.password,
+      passwordConfirmation: input.passwordConfirmation,
       username: input.companyName,
     };
 
-    if (input.email !== "" && input.password !== "") {
-      try {
-        const response = await ApiRequest.post(ENDPOINTS.SIGNUP, data);
-        const userData = response.data.user;
-        return userData;
-      } catch (error: any) {
-        if (error.response && error.response.data) {
-          const { errors } = error.response.data;
-          seterror(true);
-          setErrorMessages(errors || []);
-
-          setTimeout(() => {
-            seterror(false);
-            setErrorMessages([]);
-          }, 10000);
-        } else {
-          setErrorMessages(["An error occurred during signup."]);
-        }
-        return;
-      }
+    const validation = SignUpSchema.safeParse(data);
+    if (validation.error) {
+      const { formErrors, fieldErrors } = validation.error.flatten();
+      const allErrors = [...formErrors, ...Object.values(fieldErrors).flat()];
+      console.log(validation.error.errors);
+      displayErrors(allErrors);
+      return;
     }
-    alert("please provide a valid input");
+
+    try {
+      await ApiRequest.post(ENDPOINTS.SIGNUP, validation.data);
+      navigate("/");
+    } catch (error: any) {
+      const message = ApiRequest.extractApiErrors(error);
+      displayErrors(message);
+    }
   };
 
   const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
@@ -59,9 +55,6 @@ const SignUpForm = () => {
 
   return (
     <div>
-      {error && errorMessages && (
-        <ErrorCard message={"An error occured"} errors={errorMessages} />
-      )}
       <form onSubmit={handleSubmitEvent}>
         <div className="form">
           <div>

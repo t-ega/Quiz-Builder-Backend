@@ -5,7 +5,7 @@ class Message
     end
 
     def unauthorized_error
-      "You need to be uautorized to access this endpoint!"
+      "You need to be unauthorized to access this endpoint!"
     end
 
     def account_created

@@ -16,9 +16,7 @@ class QuizEntry < ApplicationRecord
 
   validate :prevent_update_if_quiz_taken, on: :update
 
-  belongs_to :quiz
-  has_many :quiz_entry_answers
-  accepts_nested_attributes_for :quiz_entry_answers
+  belongs_to :quiz, counter_cache: true
 
   private
 

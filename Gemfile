@@ -75,3 +75,4 @@ gem "aasm", "~> 5.5"
 gem "after_commit_everywhere", "~> 1.0"
 gem "rack-cors"
 gem "rack-attack"
+gem 'grape-active_model_serializers'

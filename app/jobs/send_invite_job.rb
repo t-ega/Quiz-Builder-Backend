@@ -22,7 +22,7 @@ class SendInviteJob < ApplicationJob
         return if entry.taken_at.present?
 
         InviteMailer
-          .with(participant: invitee, host: host, url: url)
+          .with(participant: invitee, host: host.username, url: url, quiz: quiz)
           .quiz_invite
           .deliver_later
         return

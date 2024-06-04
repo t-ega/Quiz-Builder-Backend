@@ -2,6 +2,7 @@ class Quiz < ApplicationRecord
   include AASM
   scope :pub_id, ->(public_id) { where(public_id: public_id) }
   scope :current_user, ->(current_user) { where(user: current_user) }
+  scope :published, -> { where(status: "published") }
   scope :permalink, ->(permalink) { where(permalink: permalink) }
 
   STATUSES = %w[draft published archived].freeze
@@ -40,9 +41,29 @@ class Quiz < ApplicationRecord
   before_create :generate_public_id # This is how every quiz would be referenced
 
   belongs_to :user
-  has_many :quiz_entries, dependent: :nullify, counter_cache: true
+  has_many :quiz_entries, dependent: :destroy
+
+  def questions_count
+    questions.size
+  end
+
+  def quiz_questions
+    questions.map do |question|
+      {
+        question: question["question"],
+        question_type: question["question_type"],
+        options: extract_only_options(question["options"])
+      }
+    end
+  end
 
   private
+
+  def extract_only_options(options)
+    options.each_with_object([]) do |option, result|
+      result << { option: option["option"] }
+    end
+  end
 
   def opens_at_in_future
     if opens_at.present? && opens_at <= Time.current

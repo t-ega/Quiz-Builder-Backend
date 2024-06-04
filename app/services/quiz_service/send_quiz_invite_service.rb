@@ -13,8 +13,11 @@ module QuizService
       return if quiz.permalink.blank?
 
       SendInviteJob.perform_later(
-        quiz: quiz.as_json,
-        host: @user.email,
+        quiz:
+          quiz.as_json(
+            only: %i[title id duration opens_at closes_at permalink]
+          ),
+        host: @user,
         invites: @data
       )
     end

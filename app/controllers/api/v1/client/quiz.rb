@@ -5,7 +5,24 @@ module API
         namespace :quiz do
           #   TODO: SERIALIZE RESPONSE
           route_param :permalink do
-            desc "Get details about the user's quiz."
+            desc "Get details about the quiz."
+
+            get do
+              quiz = ::Quiz.permalink(params[:permalink]).published.first
+
+              if quiz.nil?
+                render_error(
+                  message: Message.not_found,
+                  errors: "No quiz was found",
+                  code: 404
+                )
+                return
+              end
+
+              return render_success(data: { quiz: quiz.as_json(only: [:public_id, :title, :duration], methods: :questions_count) })
+            end
+
+            desc "Get the quiz questions"
 
             params do
               requires :email,
@@ -13,8 +30,15 @@ module API
                        desc: "The email of the participant"
             end
 
-            get do
-              quiz = ::Quiz.permalink(params[:permalink]).first
+            get :questions do
+              quiz =
+                ::Quiz
+                  .includes(:quiz_entries)
+                  .permalink(params[:permalink])
+                  .published
+                  .where("opens_at >= ? OR opens_at IS NULL", Time.current)
+                  .first
+
               email = params[:email].downcase
 
               if quiz.nil?
@@ -30,14 +54,14 @@ module API
 
               if quiz_entry.nil?
                 render_error(
-                  message: Message.not_found,
-                  errors: "No quiz entry was found",
-                  code: 404
+                  message: Message.unprocessable_entity,
+                  errors: "You're not registered for this quiz!",
+                  code: 401
                 )
                 return
               end
 
-              return render_success(data: { quiz: quiz, entry: quiz_entry })
+              return render_success(data: { quiz: quiz.as_json(only: [:public_id, :title, :duration], methods: :quiz_questions, ) })
             end
 
             params do
@@ -95,8 +119,9 @@ module API
               requires :email,
                        type: String,
                        desc: "The email of the participant"
-              requires :answers, type: Array, as: :options_attributes do
-                requires :id, as: :option_id, type: Integer
+              requires :entry, type: Array do
+                requires :question, type: String
+                requires :answers, type: Array[String]
               end
             end
 

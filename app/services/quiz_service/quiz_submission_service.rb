@@ -22,12 +22,16 @@ module QuizService
     private
 
     def find_quiz
-      @quiz = Quiz.includes(:quiz_entries).permalink(params[:permalink]).first
+      @quiz =
+        Quiz
+          .includes(:quiz_entries)
+          .permalink(params[:permalink])
+          .published
+          .first
     end
 
     def find_quiz_entry
-      @quiz_entry =
-        quiz&.quiz_entries&.find_by(participant_email: params[:email])
+      @quiz_entry = quiz.quiz_entries.find_by(participant_email: params[:email])
     end
 
     def quiz_not_found?
@@ -55,10 +59,7 @@ module QuizService
     end
 
     def submit_quiz_entry
-      if quiz_entry.update(
-           quiz_entry_answers_attributes: params[:options_attributes],
-           taken_at: Time.current
-         )
+      if quiz_entry.update(answers: params[:entry], taken_at: Time.current)
         GradeQuizSubmission.call(quiz_entry.id)
         send_notification
         return true
@@ -72,8 +73,8 @@ module QuizService
 
     def send_notification
       QuizEntryNotificationMailer.new_entry_notification(
-        @quiz_entry.quiz,
-        @quiz_entry
+        quiz: @quiz_entry.quiz,
+        quiz_entry: @quiz_entry
       ).deliver_later
     end
   end

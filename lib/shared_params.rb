@@ -5,7 +5,7 @@ module SharedParams
     requires :question, type: String, desc: "The contents of the question"
     requires :question_type,
              type: Symbol,
-             values: %i[MULTIPLE_CHOICE SELECT BINARY_CHOICE],
+             values: %i[MULTI_SELECT MULTIPLE_CHOICE BINARY_CHOICE],
              desc:
                "The type of the quiz e.g MULTIPLE_CHOICE, SELECT, BINARY_CHOICE"
 

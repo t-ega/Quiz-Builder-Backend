@@ -1,5 +1,6 @@
 class InviteMailer < ApplicationMailer
-  default from: "Quiz Builder <invitations@#{ENV.fetch("PRODUCTION_HOST")}>"
+  default from:
+            "Quiz Builder <invitations@#{URI(ENV.fetch("PRODUCTION_HOST")).host}>"
 
   after_deliver :record_email_delivered_event
 

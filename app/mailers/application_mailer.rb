@@ -1,4 +1,4 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "system@#{ENV.fetch("PRODUCTION_HOST")}"
+  default from: "system@#{URI(ENV.fetch("PRODUCTION_HOST")).host}>"
   layout "mailer"
 end

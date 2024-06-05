@@ -1,14 +1,89 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
-  </head>
-  <body>
-    <h1>Welcome to quiz builder.com, <%= @first_name %> <%= @last_name %></h1>
-    <p>
-      You have been invited by <%= @host %> to take a quiz! titled: <%= @quiz[:title] %>.
-      To take this quiz on the site, just follow this link: <%= @url %>
-    </p>
-    <p>Thanks for joining and have a great day!</p>
-  </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Invitation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+        }
+        .email-body {
+            padding: 20px;
+        }
+        .email-body h2 {
+            color: #333333;
+        }
+        .email-body p {
+            line-height: 1.6;
+            color: #666666;
+        }
+        .email-body a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #28a745;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .email-footer {
+            padding: 10px 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+            color: #666666;
+            font-size: 12px;
+        }
+        @media (max-width: 600px) {
+            .email-container {
+                width: 100%;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>You're Invited to Take a Quiz titled <%= @quiz[:title]%>!</h1>
+        </div>
+        
+        <div class="email-body">
+            <h2>Hello, <%= @email %>!</h2>
+            <p>You just received an invitation from <%= @host.username %> to participate in a quiz created just for you.
+            This quiz is designed to test your knowledge and provide valuable feedback.</p>
+            <p><strong>Instructions:</strong></p>
+            <p>1. Make sure you have a stable internet connection.</p>
+            <p>2. Find a quiet place free from distractions.</p>
+            <p>3. Allocate sufficient time to complete the quiz without interruptions.</p>
+            <p>4. Read each question carefully before answering.</p>
+            <p>Click the button below to start the quiz:</p>
+            <a href=<%=@url %> target="_blank">Start Quiz</a>
+        </div>
+        <div class="email-footer">
+            <p>&copy; 2024 Quiz Builder App. All rights reserved.</p>
+            <p>If you have any questions, contact us at support@quizbuilderapp.com</p>
+        </div>
+    </div>
+</body>
 </html>

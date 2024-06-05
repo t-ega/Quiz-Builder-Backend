@@ -205,7 +205,7 @@ module API
 
                 if queued
                   return(
-                    render_success(message: "Quiz invite queued successfully")
+                    render_success(message: "Quiz invite sent successfully")
                   )
                 end
                 render_error(message: "Unable to process invites", code: 400)

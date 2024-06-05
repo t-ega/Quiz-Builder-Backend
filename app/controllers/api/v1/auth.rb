@@ -14,7 +14,14 @@ module API
           email = params[:email]
 
           token = AuthManager.authenticate_user(email, password)
-          error!("Invalid email password", 401) if token.nil?
+
+          if token.nil?
+            render_error(
+              message: Message.unprocessable_entity,
+              errors: "Invalid email or password",
+              code: 422
+            )
+          end
 
           { token: token.token, username: token.user.username }
         end

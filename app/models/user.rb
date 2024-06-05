@@ -13,4 +13,9 @@ class User < ApplicationRecord
 
   has_many :authentication_tokens, dependent: :destroy
   has_many :quizzes, dependent: :destroy
+
+  def update_emails_sent_count
+    self.emails_sent += 1
+    self.save!
+  end
 end

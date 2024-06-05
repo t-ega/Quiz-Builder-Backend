@@ -68,9 +68,6 @@ module QuizService
       false
     end
 
-    def validate_answers
-    end
-
     def send_notification
       QuizEntryNotificationMailer.new_entry_notification(
         quiz: @quiz_entry.quiz,

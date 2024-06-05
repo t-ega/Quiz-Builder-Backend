@@ -21,8 +21,11 @@ class SendInviteJob < ApplicationJob
         # Only send the invite if the user has not taken the quiz
         return if entry.taken_at.present?
 
+        # Ensure a user can't exceed the email limit
+        return if (host.emails_sent >= ENV.fetch("MAX_EMAILS", 1).to_i)
+
         InviteMailer
-          .with(participant: invitee, host: host.username, url: url, quiz: quiz)
+          .with(participant: invitee, host: host, url: url, quiz: quiz)
           .quiz_invite
           .deliver_later
         return

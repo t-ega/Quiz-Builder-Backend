@@ -19,7 +19,22 @@ module API
                 return
               end
 
-              return render_success(data: { quiz: quiz.as_json(only: [:public_id, :title, :duration], methods: :questions_count) })
+              return(
+                render_success(
+                  data: {
+                    quiz:
+                      quiz.as_json(
+                        only: %i[public_id title duration],
+                        methods: :questions_count,
+                        include: {
+                          user: {
+                            only: %i[username]
+                          }
+                        }
+                      )
+                  }
+                )
+              )
             end
 
             desc "Get the quiz questions"
@@ -61,7 +76,25 @@ module API
                 return
               end
 
-              return render_success(data: { quiz: quiz.as_json(only: [:public_id, :title, :duration], methods: :quiz_questions, ) })
+              if quiz_entry.taken_at?.present?
+                render_error(
+                  message: Message.unprocessable_entity,
+                  errors: "Quiz has been taken",
+                  code: 401
+                )
+              end
+
+              return(
+                render_success(
+                  data: {
+                    quiz:
+                      quiz.as_json(
+                        only: %i[public_id title duration],
+                        methods: :quiz_questions
+                      )
+                  }
+                )
+              )
             end
 
             params do

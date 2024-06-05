@@ -13,6 +13,10 @@ import {
 } from "../../utils/validations/client";
 import { toast } from "react-toastify";
 import { QuizTestContext } from "../../utils/quiz-test.context";
+import { useMutation } from "@tanstack/react-query";
+import { submitQuiz } from "../../api-requests/quiz";
+import { getQuizStartTime, getRemainingTime } from "../../utils/cookies";
+import { formatTime } from "../../utils/format-date";
 
 const QuizEntry = (props: IComponentProps) => {
   const { displayErrors } = props;
@@ -24,17 +28,14 @@ const QuizEntry = (props: IComponentProps) => {
 
   const [quiz, setQuiz] = useState<IQuizTest>();
   const quizRef = useRef<IQuizTest | undefined>();
-  const timerRef = useRef<number | null>(null);
-  const submittedRef = useRef<boolean>(false);
   quizRef.current = quiz; // Update the ref on every render
 
-  const [remainingTime, setRemainingTime] = useState(0);
+  const [remainingTime, setRemainingTime] = useState(1000);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const { quizId } = useParams();
-  let submitted = false;
 
-  const submission = () => {
+  const compileSubmission = () => {
     const entry = quizRef.current?.questions.map((data) => {
       const options = data.options.filter((option) => option.selected === true);
       const opts = options.map((option) => option.option);
@@ -42,6 +43,10 @@ const QuizEntry = (props: IComponentProps) => {
     });
     return { email: quizData?.email, entry };
   };
+
+  const submitQuizMutation = useMutation({
+    mutationFn: submitQuiz,
+  });
 
   const updateQuestion = (updatedQuestion: IQuizTestQuestion) => {
     setQuiz((prevQuiz) => {
@@ -68,44 +73,44 @@ const QuizEntry = (props: IComponentProps) => {
     }
   };
 
-  const submitQuiz = (skip_confirmation: boolean) => {
-    // TODO: Fix issue with set interval
-    if (submittedRef.current) return;
-
+  const handleQuizSubmission = (skip_confirmation: boolean) => {
     if (!skip_confirmation) {
+      // Skipped in the case where the timer is up!
       if (!confirm("Are you sure? This cannot be reversible!")) {
         return;
       }
     }
 
-    const quizEntry = submission();
+    const quizEntry = compileSubmission();
     const transformedQuiz = QuizSubmissionSchema.safeParse(quizEntry);
 
     if (transformedQuiz.error) {
       const { formErrors, fieldErrors } = transformedQuiz.error.flatten();
       const allErrors = [...formErrors, ...Object.values(fieldErrors).flat()];
       displayErrors(allErrors);
+      return;
     }
 
-    const quizUrl = `${ENDPOINTS.SUBMIT_QUIZ}/${quizId}/submit`;
-
-    ApiRequest.post(quizUrl, transformedQuiz.data)
-      .then((res) => {
-        toast.success(res.data.message);
-        navigate(`/${quizId}`);
-      })
-      .catch((error) => {
-        const message = ApiRequest.extractApiErrors(error);
-        displayErrors(message);
-      });
-    submittedRef.current = true;
+    submitQuizMutation.mutate(
+      { quizId: quizId!, ...transformedQuiz.data },
+      {
+        onSuccess: () => {
+          toast.success("🎉 Yay! Quiz has been recorded! 🎯");
+          navigate(`/${quizId}`);
+        },
+        onError: (error, _, __) => {
+          const message = ApiRequest.extractApiErrors(error);
+          displayErrors(message);
+        },
+      }
+    );
   };
 
+  // The duration must be in seconds
   const startTimer = (duration: number | null) => {
-    if (!duration) return;
+    if (duration === null) return; // duration of 0 should be allowed
 
-    setRemainingTime(duration * 60);
-    setTotalTime(duration.toString());
+    setRemainingTime(duration);
 
     const timer = setInterval(() => {
       setRemainingTime((time) => {
@@ -113,16 +118,14 @@ const QuizEntry = (props: IComponentProps) => {
           setLimitedTimeLeft(true);
         }
 
-        if (time === 0) {
-          console.log(timer);
-          if (timerRef.current) clearInterval(timerRef.current);
-          submitQuiz(true);
+        if (time <= 0) {
+          clearInterval(timer);
+          // handleQuizSubmission(true);
           return 0;
         } else return time - 1;
       });
     }, 1000);
 
-    timerRef.current = timer;
     return timer;
   };
 
@@ -134,15 +137,24 @@ const QuizEntry = (props: IComponentProps) => {
 
     setQuiz(quizData);
     setIsLoading(false);
-
-    let timer = startTimer(quizData.duration);
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
   }, []);
+
+  useEffect(() => {
+    let timer: number | undefined;
+    // Extract the previous timer from a cookie
+    if (quiz?.duration) {
+      const startedAt = getQuizStartTime(quizId!);
+      if (startedAt) {
+        const remainingTime = getRemainingTime(quiz?.duration, startedAt);
+        timer = startTimer(remainingTime);
+      } else {
+        timer = startTimer(quiz.duration);
+      }
+
+      setTotalTime(quiz?.duration.toString());
+    }
+    return () => clearInterval(timer);
+  }, [quiz]);
 
   return (
     <>
@@ -179,9 +191,8 @@ const QuizEntry = (props: IComponentProps) => {
                   <div className="quiz-info">
                     <h2>Time left</h2>
                     <p className={limitedTimeLeft ? "limited-time" : ""}>
-                      {`${Math.floor(remainingTime / 60)}`.padStart(2, "0")}:
-                      {`${remainingTime % 60}`.padStart(2, "0")} /{" "}
-                      {totalTime.padStart(2, "0")}
+                      {formatTime(remainingTime)}/ {totalTime.padStart(2, "0")}{" "}
+                      mins
                     </p>
                   </div>
                 )}
@@ -208,7 +219,7 @@ const QuizEntry = (props: IComponentProps) => {
                   updateQuestion={updateQuestion}
                   currentQuestionIndex={currentQuestionIndex}
                   totalQuestions={quiz.questions.length}
-                  submit={submitQuiz}
+                  submit={handleQuizSubmission}
                 />
               )}
             </div>

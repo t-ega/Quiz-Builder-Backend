@@ -39,7 +39,7 @@ const columns: GridColDef[] = [
   {
     field: "score",
     headerName: "Score",
-    valueFormatter: (params: string) => (params ? params : "Nil"),
+    valueFormatter: (params: string) => (params !== null ? params : "Nil"),
   },
   {
     field: "taken_at",

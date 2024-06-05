@@ -1,5 +1,6 @@
 import ApiRequest from "../utils/api-request";
 import { ENDPOINTS } from "../utils/endpoints";
+import { IQuizTest } from "../utils/validations/client";
 
 export const getQuizzess = async () => {
   return await ApiRequest.get(ENDPOINTS.ADMIN_QUIZ).then((resp) => {
@@ -54,4 +55,40 @@ export const updateQuiz = async (data: IQuiz) => {
 
 export const createQuiz = async (data: any) => {
   return await ApiRequest.post(ENDPOINTS.ADMIN_QUIZ, data);
+};
+
+export const fetchTestDetails = async (quizId: string) => {
+  console.log("Koooooo");
+  const url = `${ENDPOINTS.SUBMIT_QUIZ}/${quizId}`;
+  return await ApiRequest.get(url).then((resp) => {
+    if (!resp) return;
+    return resp.data;
+  });
+};
+
+interface ITestQuestions {
+  quizId: string;
+  email: string;
+}
+
+export const fetchTestQuestions = async (data: ITestQuestions) => {
+  console.log("Called");
+  const { quizId, email } = data;
+  const url = `${ENDPOINTS.SUBMIT_QUIZ}/${quizId}/questions?email=${email}`;
+  return await ApiRequest.get(url).then((resp) => {
+    if (!resp) return;
+    return resp.data;
+  });
+};
+
+interface QuizSubmission extends Partial<IQuizTest> {
+  quizId: string;
+}
+
+export const submitQuiz = async (data: QuizSubmission) => {
+  console.log("Calling mutate 2");
+
+  const { quizId, ...rest } = data;
+  const quizUrl = `${ENDPOINTS.SUBMIT_QUIZ}/${quizId}/submit`;
+  return await ApiRequest.post(quizUrl, rest);
 };

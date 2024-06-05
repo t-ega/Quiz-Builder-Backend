@@ -84,12 +84,7 @@ function App() {
             ></Route>
             <Route
               path=":quizId"
-              element={
-                <HomePage
-                  displayErrors={displayErrors}
-                  setQuizData={setQuizData}
-                />
-              }
+              element={<HomePage setQuizData={setQuizData} />}
             ></Route>
             <Route path="auth" element={<Auth />}>
               <Route

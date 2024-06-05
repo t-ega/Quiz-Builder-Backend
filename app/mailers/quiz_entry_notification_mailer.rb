@@ -1,5 +1,5 @@
 class QuizEntryNotificationMailer < ApplicationMailer
-  default from: "notifications@#{ENV.fetch("PRODUCTION_HOST")}"
+  default from: "Quiz Builder <notifications@#{ENV.fetch("PRODUCTION_HOST")}>"
 
   after_deliver :record_email_delivered_event
 

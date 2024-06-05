@@ -8,8 +8,7 @@ class User < ApplicationRecord
          :registerable,
          :recoverable,
          :rememberable,
-         :validatable,
-         :confirmable
+         :validatable
 
   has_many :authentication_tokens, dependent: :destroy
   has_many :quizzes, dependent: :destroy

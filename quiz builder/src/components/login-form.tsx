@@ -1,30 +1,26 @@
 import React, { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ApiRequest from "../utils/api-request";
-import { ENDPOINTS } from "../utils/endpoints";
 import { IComponentProps } from "../utils/interfaces";
 import { LoginSchema } from "../utils/validations/auth";
+import { useMutation } from "@tanstack/react-query";
+import { login } from "../api-requests/auth";
+import LoadingButton from "./loading-button";
 
 const LoginForm = (props: IComponentProps) => {
   const { displayErrors } = props;
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const [input, setInput] = useState({
-    email: "",
-    password: "",
+  const loginMutation = useMutation({
+    mutationFn: login,
   });
-
-  const [user, setuser] = useState(null);
 
   const handleSubmitEvent = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const data = {
-      email: input.email,
-      password: input.password,
-    };
-
-    const validation = LoginSchema.safeParse(data);
+    const validation = LoginSchema.safeParse({ email, password });
     if (validation.error) {
       const { formErrors, fieldErrors } = validation.error.flatten();
       const allErrors = [...formErrors, ...Object.values(fieldErrors).flat()];
@@ -32,26 +28,23 @@ const LoginForm = (props: IComponentProps) => {
       return;
     }
 
-    try {
-      await ApiRequest.post(ENDPOINTS.LOGIN, validation.data);
-      navigate("/");
-    } catch (error: any) {
-      const message = ApiRequest.extractApiErrors(error);
-      displayErrors(message);
-    }
-  };
-
-  const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
-    const { name, value } = e.currentTarget;
-    setInput((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    loginMutation.mutate(
+      {
+        email: validation.data.email,
+        password: validation.data.password,
+      },
+      {
+        onSuccess: () => navigate("/"),
+        onError: (error) => {
+          const message = ApiRequest.extractApiErrors(error);
+          displayErrors(message);
+        },
+      }
+    );
   };
 
   return (
     <div>
-      {user && <Navigate to={"/"} />}
       <form onSubmit={handleSubmitEvent}>
         <div className="form">
           <div>
@@ -61,8 +54,8 @@ const LoginForm = (props: IComponentProps) => {
                 className="input-control"
                 type="text"
                 name="email"
-                onChange={handleInput}
-                value={input.email}
+                onChange={(e) => setEmail(e.target.value)}
+                value={email}
                 placeholder="johndoe@gmail.com"
               />
             </div>
@@ -73,15 +66,18 @@ const LoginForm = (props: IComponentProps) => {
                 type="password"
                 placeholder="***************"
                 name="password"
-                value={input.password}
-                onChange={handleInput}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <p className="forgot-password">
               <Link to="">Forgot password?</Link>
             </p>
-
-            <button className="btn">Login</button>
+            {loginMutation.isPending ? (
+              <LoadingButton />
+            ) : (
+              <button className="btn">Login</button>
+            )}
           </div>
           <div>
             Are you new? <Link to="/auth/signup">Create an Account</Link>

@@ -121,10 +121,10 @@ a {
   max-width: 40%;
   border-right-style: solid;
   border-right-width: 1px;
-  position: absolute;
+  position: fixed;
   top: 70px;
   left: 0;
-  height: 100vh;
+  height: 100%;
 }
 
 .sidebar a {
@@ -202,7 +202,6 @@ a {
   margin: 30px;
   border-radius: 25px;
   font-weight: bold;
-  min-width: 600px;
   height: min-content;
 }
 
@@ -423,14 +422,19 @@ h1 {
 button:hover {
   cursor: pointer;
 }
+.main {
+  overflow-x: hidden;
+}
+
 .header {
   padding-left: 20px;
   display: flex;
-  position: sticky;
+  margin-top: 0;
   justify-content: space-between;
   z-index: 1;
+  width: 100%;
   align-items: center;
-  background-color: #ffffff;
+  background-color: white;
 }
 
 .header svg {
@@ -576,6 +580,7 @@ input:focus {
   z-index: 10;
 }
 
+
 /* Media Queries */
 @media (min-width: 600px) {
   .auth-container {
@@ -622,9 +627,28 @@ input:focus {
 
 }
 
+@media (max-width: 1000px) and (min-width: 600px){
+  .quiz-entry {
+    flex-direction: column;
+  }
+
+  .quiz-info {
+    margin: 20px;
+    min-width: 100px;
+  }
+
+  .quiz-meta {
+    justify-content: space-between ;
+  }
+}
+
 @media (max-width: 750px){
   .invite {
     display: flex;
+    flex-direction: column;
+  }
+
+  .card {
     flex-direction: column;
   }
 }
@@ -633,7 +657,7 @@ input:focus {
   .question-card {
     margin: 0;
     padding: 20px;
-    min-width: 500px;
+    min-width: 300px;
     margin-top: 30px;
   }
 
@@ -680,6 +704,10 @@ input:focus {
 
   .quiz-dashboard {
     margin-left: 50px;
+  }
+
+  .question-card {
+    min-width: 600px;
   }
 }
 

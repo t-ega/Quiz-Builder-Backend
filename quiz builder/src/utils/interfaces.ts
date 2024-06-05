@@ -59,3 +59,11 @@ export interface QuizInfoProps {
   questionsList: any[];
   dispatch: AppDispatch;
 }
+
+export interface IAuthData {
+  username: string;
+}
+
+export interface IAuthProps extends IComponentProps {
+  setAuthData: React.Dispatch<React.SetStateAction<IAuthData | null>>;
+}

@@ -58,7 +58,6 @@ export const createQuiz = async (data: any) => {
 };
 
 export const fetchTestDetails = async (quizId: string) => {
-  console.log("Koooooo");
   const url = `${ENDPOINTS.SUBMIT_QUIZ}/${quizId}`;
   return await ApiRequest.get(url).then((resp) => {
     if (!resp) return;
@@ -72,7 +71,6 @@ interface ITestQuestions {
 }
 
 export const fetchTestQuestions = async (data: ITestQuestions) => {
-  console.log("Called");
   const { quizId, email } = data;
   const url = `${ENDPOINTS.SUBMIT_QUIZ}/${quizId}/questions?email=${email}`;
   return await ApiRequest.get(url).then((resp) => {
@@ -86,8 +84,6 @@ interface QuizSubmission extends Partial<IQuizTest> {
 }
 
 export const submitQuiz = async (data: QuizSubmission) => {
-  console.log("Calling mutate 2");
-
   const { quizId, ...rest } = data;
   const quizUrl = `${ENDPOINTS.SUBMIT_QUIZ}/${quizId}/submit`;
   return await ApiRequest.post(quizUrl, rest);

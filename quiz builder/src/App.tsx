@@ -77,7 +77,6 @@ function App() {
                 </Route>
               </Route>
             </Route>
-
             <Route
               path=":quizId/start"
               element={<QuizEntry displayErrors={displayErrors} />}

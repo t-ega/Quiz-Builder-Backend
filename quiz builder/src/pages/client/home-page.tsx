@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import { IComponentProps, KeyValuePair } from "../../utils/interfaces";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ApiRequest from "../../utils/api-request";
 import Header from "../../components/header";
@@ -11,7 +10,6 @@ import { fetchTestDetails, fetchTestQuestions } from "../../api-requests/quiz";
 import LoadingButton from "../../components/loading-button";
 import { toast } from "react-toastify";
 import { getQuizStartTime, setQuizStartTime } from "../../utils/cookies";
-import NotFound from "../errors/404";
 import ErrorPage from "../errors/error";
 
 interface IHomePageProps {
@@ -112,18 +110,18 @@ const HomePage = (props: IHomePageProps) => {
 
   return (
     <>
-      <Header />
+      <Header heading={data.data.quiz.user.username} text="Assessment" />
 
       <div
         className="card"
         style={{
           display: "flex",
-          maxWidth: "1000px",
+          height: "100vh",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <div className="quiz-detail">
+        <div>
           <h2>{data.data?.quiz.title}</h2>
           <p>
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Tempore

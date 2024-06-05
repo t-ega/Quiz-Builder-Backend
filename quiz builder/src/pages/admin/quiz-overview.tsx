@@ -74,7 +74,7 @@ const QuizOverview = (props: IComponentProps) => {
       setInput({ email: "", firstName: "", lastName: "" });
       queryClient.invalidateQueries({ queryKey: ["quiz", quizId] });
     },
-    onError: (err, _, ctx) => {
+    onError: (err) => {
       const message = ApiRequest.extractApiErrors(err);
       displayErrors(message);
     },
@@ -101,7 +101,7 @@ const QuizOverview = (props: IComponentProps) => {
       toast.success("🎉 Quiz Status Updated Successfuly!");
       setQuiz(data.data);
     },
-    onError: (err, _, ctx) => {
+    onError: (err) => {
       const message = ApiRequest.extractApiErrors(err);
       displayErrors(message);
     },
@@ -404,7 +404,8 @@ const QuizOverview = (props: IComponentProps) => {
           </CardHeader>
 
           <DataGrid
-            rows={entries}
+            rows={[]}
+            loading
             sx={{ minHeight: "200px" }}
             columns={columns}
             initialState={{

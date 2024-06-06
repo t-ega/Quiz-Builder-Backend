@@ -9,9 +9,6 @@ class QuizEntryNotificationMailer < ApplicationMailer
     @quiz_entry = quiz_entry
     @host = @quiz.user
 
-    # Ensure a user can't exceed the email limit
-    return if (@host.emails_sent >= ENV.fetch("MAX_EMAILS", 1).to_i)
-
     mail(to: @host.email, subject: "New Quiz Entry Recorded")
   end
 

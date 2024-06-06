@@ -69,6 +69,10 @@ module QuizService
     end
 
     def send_notification
+      host = @quiz.user
+      # Ensure a user can't exceed the email limit
+      return if (host.emails_sent >= ENV.fetch("MAX_EMAILS", 1).to_i)
+
       QuizEntryNotificationMailer.new_entry_notification(
         quiz: @quiz_entry.quiz,
         quiz_entry: @quiz_entry

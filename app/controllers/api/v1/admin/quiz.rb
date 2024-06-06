@@ -142,7 +142,7 @@ module API
                 updated_quiz = quiz.update_quiz
 
                 if updated_quiz
-                  puts "Updated quiz.#{update_quiz.inspect}"
+                  puts "Updated quiz.#{updated_quiz.inspect}"
                   return(
                     render_success(
                       message: "Quiz updated successfuly",

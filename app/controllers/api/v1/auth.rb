@@ -13,17 +13,18 @@ module API
           password = params[:password]
           email = params[:email]
 
-          token = AuthManager.authenticate_user(email, password)
+          status, result =
+            Session::Creator.new(email: email, password: password).call
 
-          if token.nil?
+          if status != :ok
             render_error(
               message: Message.unprocessable_entity,
-              errors: "Invalid email or password",
+              errors: result,
               code: 422
             )
           end
 
-          { token: token.token, username: token.user.username }
+          { token: result.token, username: result.user.username }
         end
 
         desc "Register a user"
@@ -39,35 +40,44 @@ module API
           password = params[:password]
           email = params[:email]
 
-          user = CreateUserService.call(username, password, email)
+          status, result =
+            Session::Creator.new(
+              username: username,
+              password: password,
+              email: email
+            ).call
 
-          if user.valid?
-            token = AuthManager.authenticate_user(email, password)
-            return(
-              {
-                user: user,
-                message: Message.account_created,
-                token: token.token
-              }
-            )
-          else
-            error!(
-              {
-                sucess: false,
-                message: Message.unprocessable_entity,
-                errors: user.errors.full_messages
-              },
+          if status != :ok
+            render_error(
+              { message: Message.unprocessable_entity, errors: result },
               422
             )
           end
+
+          status, token = Session::Manager.new(email: email, password: password)
+          if status != :ok
+            render_error(
+              { message: Message.unprocessable_entity, errors: result },
+              422
+            )
+          end
+
+          render_success(
+            {
+              user: result,
+              message: Message.account_created,
+              token: token.token
+            }
+          )
         end
 
         desc "Logout a user by expiring the token"
 
         post :logout do
           authenticate!
+
           token = authorization_token
-          AuthManager.revoke_token(token)
+          Session::Destroyer.new(token).call
           status :no_content
         end
       end

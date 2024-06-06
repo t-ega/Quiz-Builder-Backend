@@ -29,26 +29,21 @@ module API
             post do
               authenticate!
 
-              quiz =
-                QuizService::CreateQuizService.call(
+              status, result =
+                Quizzes::Creator.new(
                   **declared(params, include_parent_namespaces: false),
                   user: current_user
-                )
+                ).call
 
-              if quiz.valid?
-                return(
-                  render_success(
-                    message: "Quiz created successfuly",
-                    data: quiz
-                  )
+              if status != :ok
+                render_error(
+                  message: Message.unprocessable_entity,
+                  errors: result,
+                  code: 422
                 )
               end
 
-              render_error(
-                message: Message.unprocessable_entity,
-                errors: quiz.errors.full_messages,
-                code: 422
-              )
+              render_success(message: "Quiz created successfuly", data: result)
             end
 
             desc "Fetch the details of a quiz for the currently authenticated user"
@@ -74,7 +69,7 @@ module API
 
               return(
                 render_success(
-                  message: "Quiz found--",
+                  message: "Quiz found",
                   data: quiz.as_json(exclude: %i[questions id user_id])
                 )
               )
@@ -87,7 +82,7 @@ module API
 
               quiz = ::Quiz.where(user: current_user)
 
-              if quiz.nil?
+              if quiz.blank?
                 render_error(
                   message: Message.not_found,
                   errors: "Quizzes for user was not found",
@@ -95,15 +90,13 @@ module API
                 )
               end
 
-              return(
-                render_success(
-                  message: "Quizzes found",
-                  data:
-                    quiz.as_json(
-                      exclude: %i[questions user_id id],
-                      methods: :questions_count
-                    )
-                )
+              render_success(
+                message: "Quizzes found",
+                data:
+                  quiz.as_json(
+                    exclude: %i[questions user_id id],
+                    methods: :questions_count
+                  )
               )
             end
 
@@ -138,6 +131,7 @@ module API
                     params[:id],
                     declared(params, include_parent_namespaces: false)
                   )
+
                 updated_quiz = quiz.update_quiz
 
                 if updated_quiz
@@ -169,7 +163,7 @@ module API
                     user: current_user
                   )
 
-                if quiz.nil?
+                if quiz.blank?
                   render_error(
                     message: Message.not_found,
                     errors: "Quiz with id: #{hash_params[:id]} was not found",
@@ -177,9 +171,7 @@ module API
                   )
                 end
 
-                return(
-                  render_success(message: "Quiz found", data: quiz.quiz_entries)
-                )
+                render_success(message: "Quiz found", data: quiz.quiz_entries)
               end
 
               desc "Send invites to quiz participants"
@@ -195,19 +187,18 @@ module API
               post "/invite" do
                 authenticate!
 
-                queued =
-                  QuizService::SendQuizInviteService.call(
+                status, result =
+                  Quizzes::Inviter.new(
                     params[:id],
                     current_user,
                     params[:invites]
-                  )
+                  ).call
 
-                if queued
-                  return(
-                    render_success(message: "Quiz invite sent successfully")
-                  )
+                if status != :ok
+                  render_error(message: "Unable to process invites", code: 400)
                 end
-                render_error(message: "Unable to process invites", code: 400)
+
+                render_success(message: "Quiz invite sent successfully")
               end
 
               desc "Delete a quiz"
@@ -228,15 +219,15 @@ module API
 
                 success = quiz.destroy
 
-                if success
-                  return(render_success(message: "Quiz deleted!", data: quiz))
+                if !success
+                  render_error(
+                    message: Message.unprocessable_entity,
+                    errors: success.errors,
+                    code: 404
+                  )
                 end
 
-                render_error(
-                  message: Message.unprocessable_entity,
-                  errors: success.errors,
-                  code: 404
-                )
+                return(render_success(message: "Quiz deleted!", data: quiz))
               end
             end
           end

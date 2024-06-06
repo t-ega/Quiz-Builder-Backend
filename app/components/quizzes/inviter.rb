@@ -1,6 +1,6 @@
-module QuizService
-  class SendQuizInviteService < ApplicationService
-    def initialize(id, user, data)
+module Quizzes
+  class Inviter
+    def initialize(id:, user:, data:)
       @id = id
       @user = user
       @data = data
@@ -8,9 +8,9 @@ module QuizService
 
     def call
       quiz = Quiz.pub_id(@id).current_user(@user).first
-      return if quiz.nil?
+      return :error, "The requested quiz could not be found" if quiz.blank?
 
-      return if quiz.permalink.blank?
+      return :error, nil if quiz.permalink.blank?
 
       SendInviteJob.perform_later(
         quiz:
@@ -20,6 +20,8 @@ module QuizService
         host: @user,
         invites: @data
       )
+
+      [:ok, "Invitation sent"]
     end
   end
 end

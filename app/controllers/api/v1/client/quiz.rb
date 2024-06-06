@@ -8,32 +8,30 @@ module API
             desc "Get details about the quiz."
 
             get do
-              quiz = ::Quiz.permalink(params[:permalink]).published.first
+              quiz =
+                ::Quiz.find_by_permalink_and_published(params[:permalink], true)
 
-              if quiz.nil?
+              if quiz.blank?
                 render_error(
                   message: Message.not_found,
                   errors: "No quiz was found",
                   code: 404
                 )
-                return
               end
 
-              return(
-                render_success(
-                  data: {
-                    quiz:
-                      quiz.as_json(
-                        only: %i[public_id title duration],
-                        methods: :questions_count,
-                        include: {
-                          user: {
-                            only: %i[username]
-                          }
+              render_success(
+                data: {
+                  quiz:
+                    quiz.as_json(
+                      only: %i[public_id title duration],
+                      methods: :questions_count,
+                      include: {
+                        user: {
+                          only: %i[username]
                         }
-                      )
-                  }
-                )
+                      }
+                    )
+                }
               )
             end
 
@@ -47,33 +45,28 @@ module API
 
             get :questions do
               quiz =
-                ::Quiz
-                  .includes(:quiz_entries)
-                  .permalink(params[:permalink])
-                  .published
-                  .where("opens_at >= ? OR opens_at IS NULL", Time.current)
-                  .first
+                ::Quiz.includes(:quiz_entries).find_by_permalink_and_published(
+                  params[:permalink],
+                  true
+                )
 
-              email = params[:email].downcase
-
-              if quiz.nil?
+              if quiz.blank?
                 render_error(
                   message: Message.not_found,
                   errors: "No quiz was found",
                   code: 404
                 )
-                return
               end
 
+              email = params[:email].downcase
               quiz_entry = quiz.quiz_entries.find_by(participant_email: email)
 
-              if quiz_entry.nil?
+              if quiz_entry.blank?
                 render_error(
                   message: Message.unprocessable_entity,
                   errors: "You're not registered for this quiz!",
                   code: 401
                 )
-                return
               end
 
               if quiz_entry.taken_at?.present?
@@ -84,16 +77,14 @@ module API
                 )
               end
 
-              return(
-                render_success(
-                  data: {
-                    quiz:
-                      quiz.as_json(
-                        only: %i[public_id title duration],
-                        methods: :quiz_questions
-                      )
-                  }
-                )
+              render_success(
+                data: {
+                  quiz:
+                    quiz.as_json(
+                      only: %i[public_id title duration],
+                      methods: :quiz_questions
+                    )
+                }
               )
             end
 
@@ -110,19 +101,18 @@ module API
             end
 
             post :invite do
-              quiz = ::Quiz.permalink(params[:permalink]).first
+              quiz = ::Quiz.find_by_permalink(params[:permalink])
 
-              if quiz.nil?
+              if quiz.blank?
                 render_error(
                   message: Message.not_found,
                   errors:
                     "No open quiz was found. Kindly reach out to your host.",
                   code: 404
                 )
-                return
               end
 
-              invite = [
+              invite_payload = [
                 {
                   email: params[:email].downcase,
                   first_name: params[:first_name].titleize,
@@ -130,22 +120,18 @@ module API
                 }
               ]
 
-              queued =
-                QuizService::SendQuizInviteService.call(
-                  quiz.public_id,
-                  quiz.user,
-                  invite
-                )
+              status, result =
+                Quizzes::Inviter.new(
+                  id: quiz.public_id,
+                  user: quiz.user,
+                  data: invite_payload
+                ).call
 
-              if queued
-                return(
-                  render_success(
-                    message: "An email has been sent to your inbox."
-                  )
-                )
+              if status != :ok
+                render_error(message: Message.unprocessable_entity, code: 400)
               end
 
-              render_error(message: Message.unprocessable_entity, code: 400)
+              render_success(message: result)
             end
 
             params do
@@ -161,22 +147,17 @@ module API
             post :submit do
               valid_params = declared(params, include_parent_namespaces: false)
               valid_params[:permalink] = params[:permalink]
-              submission = QuizService::QuizSubmissionService.new(valid_params)
+              status, result = Quizzes::Submitter.new(valid_params).call
 
-              if submission.call
-                return(
-                  render_success(
-                    message: "Quiz submitted",
-                    data: submission.quiz_entry
-                  )
+              if status != :ok
+                render_error(
+                  message: Message.unprocessable_entity,
+                  errors: result,
+                  code: 422
                 )
               end
 
-              render_error(
-                message: Message.unprocessable_entity,
-                errors: submission.errors,
-                code: 422
-              )
+              render_success(message: "Quiz submitted")
             end
           end
         end

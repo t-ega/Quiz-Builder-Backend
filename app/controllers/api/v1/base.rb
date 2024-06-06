@@ -12,11 +12,13 @@ module API
           return nil if authorization_token.nil?
 
           @current_user ||=
-            AuthManager.find_by_authentication_token(authorization_token)
+            AuthenticationToken.find_user_by_authentication_token(
+              authorization_token
+            )
         end
 
         def authenticate!
-          unless current_user
+          if !current_user
             render_error(
               message: Message.unauthorized_error,
               errors: "401 Unautorized",

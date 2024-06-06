@@ -138,10 +138,11 @@ module API
                     params[:id],
                     declared(params, include_parent_namespaces: false)
                   )
-
+                puts "Updating quiz.#{params}"
                 updated_quiz = quiz.update_quiz
 
                 if updated_quiz
+                  puts "Updated quiz.#{update_quiz.inspect}"
                   return(
                     render_success(
                       message: "Quiz updated successfuly",

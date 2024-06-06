@@ -58,12 +58,10 @@ module QuizService
     end
 
     def params_with_values(params)
-      puts "Params recieved: #{params.inspect}"
       extracted =
         params.each_with_object({}) do |(key, value), extracted|
           extracted[key] = value if params[key].present?
         end
-      puts "Params output: #{extracted.inspect}"
       extracted.with_indifferent_access
     end
   end

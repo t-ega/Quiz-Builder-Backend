@@ -22,20 +22,9 @@ module API
                 )
               end
 
-              render_success(
-                data: {
-                  quiz:
-                    quiz.as_json(
-                      only: %i[public_id title duration],
-                      methods: :questions_count,
-                      include: {
-                        user: {
-                          only: %i[username]
-                        }
-                      }
-                    )
-                }
-              )
+              quiz_presenter = Quizzes::QuizPresenter.new(quiz)
+
+              render_success(data: { quiz: quiz_presenter.quiz_details })
             end
 
             desc "Get the quiz questions"
@@ -80,15 +69,9 @@ module API
                 )
               end
 
-              render_success(
-                data: {
-                  quiz:
-                    quiz.as_json(
-                      only: %i[public_id title duration],
-                      methods: :quiz_questions
-                    )
-                }
-              )
+              quiz_presenter = Quizzes::QuizPresenter.new(quiz)
+
+              render_success(data: { quiz: quiz_presenter.quiz_test_questions })
             end
 
             params do

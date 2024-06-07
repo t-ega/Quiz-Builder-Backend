@@ -10,7 +10,7 @@ module Quizzes
       quiz = Quiz.pub_id(@id).current_user(@user).first
       return :error, "The requested quiz could not be found" if quiz.blank?
 
-      return :error, nil if quiz.permalink.blank?
+      return :error, "Unable to process invites" if quiz.permalink.blank?
 
       SendInviteJob.perform_later(
         quiz:
@@ -21,7 +21,7 @@ module Quizzes
         invites: @data
       )
 
-      [:ok, "Invitation sent"]
+      [:ok, "Quiz invite sent successfully"]
     end
   end
 end

@@ -67,11 +67,9 @@ module API
                 )
               end
 
-              return(
-                render_success(
-                  message: "Quiz found",
-                  data: quiz.as_json(exclude: %i[questions id user_id])
-                )
+              render_success(
+                message: "Quiz found",
+                data: quiz.as_json(exclude: %i[questions id user_id])
               )
             end
 
@@ -82,7 +80,7 @@ module API
 
               quiz = ::Quiz.where(user: current_user)
 
-              if quiz.blank?
+              if quiz.nil?
                 render_error(
                   message: Message.not_found,
                   errors: "Quizzes for user was not found",
@@ -126,27 +124,24 @@ module API
               put do
                 authenticate!
 
-                quiz =
-                  QuizService::UpdateQuizService.new(
-                    params[:id],
-                    declared(params, include_parent_namespaces: false)
-                  )
+                status, result =
+                  Quizzes::Updater.new(
+                    quiz_id: params[:id],
+                    update_options:
+                      declared(params, include_parent_namespaces: false)
+                  ).call
 
-                updated_quiz = quiz.update_quiz
-
-                if updated_quiz
-                  return(
-                    render_success(
-                      message: "Quiz updated successfuly",
-                      data: updated_quiz
-                    )
+                if status != :ok
+                  render_error(
+                    message: Message.unprocessable_entity,
+                    errors: result,
+                    code: 422
                   )
                 end
 
-                render_error(
-                  message: Message.unprocessable_entity,
-                  errors: quiz.errors.flatten,
-                  code: 422
+                render_success(
+                  message: "Quiz updated successfuly",
+                  data: result
                 )
               end
 
@@ -189,16 +184,14 @@ module API
 
                 status, result =
                   Quizzes::Inviter.new(
-                    params[:id],
-                    current_user,
-                    params[:invites]
+                    id: params[:id],
+                    user: current_user,
+                    data: params[:invites]
                   ).call
 
-                if status != :ok
-                  render_error(message: "Unable to process invites", code: 400)
-                end
+                render_error(message: result, code: 400) if status != :ok
 
-                render_success(message: "Quiz invite sent successfully")
+                render_success(message: result)
               end
 
               desc "Delete a quiz"
@@ -206,28 +199,17 @@ module API
               delete do
                 authenticate!
 
-                quiz =
-                  ::Quiz.find_by(public_id: params[:id], user: current_user)
+                public_id = params[:id]
 
-                if quiz.nil?
-                  render_error(
-                    message: Message.not_found,
-                    errors: "Quiz with id: #{params[:id]} was not found",
-                    code: 404
-                  )
-                end
+                status, result, code =
+                  Quizzes::Destroyer.new(
+                    public_id: public_id,
+                    user: current_user
+                  ).call
 
-                success = quiz.destroy
+                render_error(message: result, code: code) if status != :ok
 
-                if !success
-                  render_error(
-                    message: Message.unprocessable_entity,
-                    errors: success.errors,
-                    code: 404
-                  )
-                end
-
-                return(render_success(message: "Quiz deleted!", data: quiz))
+                return(render_success(message: result))
               end
             end
           end

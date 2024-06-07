@@ -9,7 +9,10 @@ module API
 
             get do
               quiz =
-                ::Quiz.find_by_permalink_and_published(params[:permalink], true)
+                ::Quiz.find_by_permalink_and_status(
+                  params[:permalink],
+                  :published
+                )
 
               if quiz.blank?
                 render_error(
@@ -45,9 +48,9 @@ module API
 
             get :questions do
               quiz =
-                ::Quiz.includes(:quiz_entries).find_by_permalink_and_published(
+                ::Quiz.includes(:quiz_entries).find_by_permalink_and_status(
                   params[:permalink],
-                  true
+                  :published
                 )
 
               if quiz.blank?

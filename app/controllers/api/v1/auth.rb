@@ -14,7 +14,7 @@ module API
           email = params[:email]
 
           status, result =
-            Session::Creator.new(email: email, password: password).call
+            Session::Manager.new(email: email, password: password).call
 
           if status != :ok
             render_error(
@@ -24,7 +24,12 @@ module API
             )
           end
 
-          { token: result.token, username: result.user.username }
+          render_success(
+            data: {
+              token: result.token,
+              username: result.user.username
+            }
+          )
         end
 
         desc "Register a user"
@@ -49,25 +54,29 @@ module API
 
           if status != :ok
             render_error(
-              { message: Message.unprocessable_entity, errors: result },
-              422
+              message: Message.unprocessable_entity,
+              errors: result,
+              code: 422
             )
           end
 
-          status, token = Session::Manager.new(email: email, password: password)
+          status, result =
+            Session::Manager.new(email: email, password: password).call
+
           if status != :ok
             render_error(
-              { message: Message.unprocessable_entity, errors: result },
-              422
+              message: Message.unprocessable_entity,
+              errors: result,
+              code: 422
             )
           end
 
           render_success(
-            {
-              user: result,
-              message: Message.account_created,
-              token: token.token
-            }
+            data: {
+              username: result.user.username,
+              token: result.token
+            },
+            message: Message.account_created
           )
         end
 

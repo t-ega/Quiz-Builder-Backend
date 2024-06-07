@@ -1,14 +1,14 @@
 module Quizzes
   class Submitter
     def initialize(data)
-        @data = data.with_indifferent_access
+      @data = data.with_indifferent_access
     end
 
     def call
       @quiz =
-        Quiz.includes(:quiz_entries).find_by_permalink_and_published(
+        Quiz.includes(:quiz_entries).find_by_permalink_and_status(
           data[:permalink],
-          true
+          :published
         )
 
       return :error, "The quiz requested was not found" if quiz.blank?
@@ -21,6 +21,8 @@ module Quizzes
       if quiz_entry.taken_at.present?
         return :error, "The quiz has already been taken!"
       end
+
+      submit_quiz_entry
     end
 
     private
@@ -29,10 +31,11 @@ module Quizzes
 
     def submit_quiz_entry
       if quiz_entry.update(answers: data[:entry], taken_at: Time.current)
-        GradeQuizSubmission.call(quiz_entry.id)
+        Grader.new(quiz_entry.id).call
         send_notification
-        [:ok]
+        return [:ok]
       end
+
       [:error, "The quiz could not be recorded!"]
     end
 

@@ -91,18 +91,11 @@ class Quiz < ApplicationRecord
   end
 
   def generate_public_id
-    loop do
-      self.public_id = SecureRandom.uuid
-      break unless Quiz.exists?(public_id: public_id)
-    end
+    self.public_id = SecureRandom.uuid
   end
 
   def generate_permalink
     return if permalink.present?
-
-    loop do
-      self.permalink = SecureRandom.alphanumeric(15)
-      break unless Quiz.exists?(permalink: permalink)
-    end
+    self.permalink = SecureRandom.alphanumeric(15)
   end
 end

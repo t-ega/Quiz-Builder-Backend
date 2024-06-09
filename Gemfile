@@ -47,7 +47,9 @@ gem "bootsnap", require: false
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[mri windows]
-  gem "rspec-rails", "~> 3.2"
+  gem "rspec-rails", "~> 6.1.0"
+  gem "faker"
+  gem "factory_bot_rails"
 end
 
 group :development do
@@ -65,6 +67,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+  gem "shoulda-matchers", "~> 6.0"
 end
 
 gem "grape", "~> 2.0"
@@ -75,4 +78,4 @@ gem "aasm", "~> 5.5"
 gem "after_commit_everywhere", "~> 1.0"
 gem "rack-cors"
 gem "rack-attack"
-gem 'grape-active_model_serializers'
+gem "grape-active_model_serializers"

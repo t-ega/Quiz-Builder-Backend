@@ -14,7 +14,7 @@ module Quizzes
       quiz.update(@data.except(:status))
       return :error, quiz.errors.full_messages if !quiz.valid?
 
-      status = @data[:status]
+      status = @data[:status]&.to_sym
 
       if status
         if quiz.aasm.may_fire_event?(status)

@@ -15,7 +15,7 @@ module Quizzes
 
       @quiz_entry = quiz.quiz_entries.find_by(participant_email: data[:email])
       if quiz_entry.blank?
-        return :error, "The quiz entry requested was not found"
+        return :error, "Participant not enrolled for the quiz"
       end
 
       if quiz_entry.taken_at.present?
@@ -31,7 +31,10 @@ module Quizzes
 
     def submit_quiz_entry
       if quiz_entry.update(answers: data[:entry], taken_at: Time.current)
-        Grader.new(quiz_entry.id).call
+        result = Grader.new(quiz_entry.id).call
+
+        return :error, "The quiz could not be graded" if !result
+
         send_notification
         return [:ok]
       end

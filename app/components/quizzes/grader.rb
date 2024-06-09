@@ -11,7 +11,7 @@ module Quizzes
       return false if entry.blank?
 
       score = calculate_score
-      entry.update!(score: score)
+      entry.update(score: score)
     end
 
     private

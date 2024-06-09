@@ -22,15 +22,12 @@ class Quiz < ApplicationRecord
   end
 
   # These are the attributes that can be modified when the quiz has been published
-  ALLOWED_ATTRIBUTES_WHEN_PUBLISHED = %w[active status].freeze
+  ALLOWED_ATTRIBUTES_WHEN_PUBLISHED = %w[status].freeze
 
   # TODO: Re-visit this later with Abiodun
   validate :quiz_published, on: :update
 
   validates :title, presence: true, length: { minimum: 3, maximum: 30 }
-
-  validate :opens_at_in_future
-  validate :closes_at_after_opens_at
 
   validates :status,
             inclusion: {

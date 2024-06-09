@@ -9,7 +9,7 @@ RSpec.describe QuizEntry, type: :model do
   end
   it { should allow_value("myemail@example.com").for(:participant_email) }
   it { should_not allow_value("email").for(:participant_email) }
-  it { should belong_to(:quiz) }
+  it { should belong_to(:quiz).counter_cache(true) }
 
   describe "create" do
     let!(:quiz) { FactoryBot.create(:quiz) }

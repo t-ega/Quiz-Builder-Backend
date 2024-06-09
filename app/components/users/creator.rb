@@ -1,4 +1,4 @@
-module User
+module Users
   class Creator
     def initialize(email:, password:, username:)
       @email = email

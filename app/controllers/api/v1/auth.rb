@@ -14,7 +14,7 @@ module API
           email = params[:email]
 
           status, result =
-            Session::Manager.new(email: email, password: password).call
+            Session::Creator.new(email: email, password: password).call
 
           if status != :ok
             render_error(
@@ -46,7 +46,7 @@ module API
           email = params[:email]
 
           status, result =
-            Session::Creator.new(
+            Users::Creator.new(
               username: username,
               password: password,
               email: email
@@ -61,7 +61,7 @@ module API
           end
 
           status, result =
-            Session::Manager.new(email: email, password: password).call
+            Session::Creator.new(email: email, password: password).call
 
           if status != :ok
             render_error(

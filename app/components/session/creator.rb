@@ -21,7 +21,7 @@ module Session
           user: user,
           expires_at: TOKEN_EXPIRATION_TIME
         )
-      return :error, token.errors.full_messages if token.errors.present
+      return :error, token.errors.full_messages if token.errors.present?
 
       [:ok, token]
     end
